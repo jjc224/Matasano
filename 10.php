@@ -86,12 +86,4 @@ function strip_pkcs7($padded_str)
 
 // echo $dec;
 
-
-// ----------------------------------------------------------------------------------------------------------------------------------------------
-
-// $enc = encrypt_aes_cbc('YELLOW SUBMARINE', 'Fuck off, you fucking disgusting piece of shit. I hope your dad drowns you.', 'Sixteen chars!?!');
-// $dec = decrypt_aes_cbc('YELLOW SUBMARINE', $enc, 'Sixteen chars!?!');
-
-// ----------------------------------------------------------------------------------------------------------------------------------------------
-
 ?>
