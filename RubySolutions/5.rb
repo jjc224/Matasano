@@ -3,7 +3,7 @@ ciphertext = ''
 key        = 'ICE'
 
 plaintext.split('').each_with_index do |c, i|
-	ciphertext << "%02x" % (c.bytes[0] ^ key[i % 3].bytes[0])
+	ciphertext << "%02x" % (c.bytes[0] ^ key[i % key.length].bytes[0])
 end
 
 puts ciphertext
