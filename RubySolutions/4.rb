@@ -1,3 +1,6 @@
+# Challenge 4: detect single-character XOR cipher amongst a file of 60 possible ciphertexts.
+# Additionally, let's break it. ;)
+
 require 'open-uri'
 
 def xor_hex(a, b)
@@ -8,17 +11,16 @@ end
 def xor_brute(enc, charset)
 	solution_data = {'score' => 0}
 	
+	# Splits up given charset (common characters) into a regular expression for comparison against resulting plaintexts.
+	# 'ABC' => /A|B|C/i
+	regexpr = Regexp.union(charset.split(''))
+	regexpr = Regexp.new(regexpr.source, Regexp::IGNORECASE)
+	
 	(1..255).each do |c|
 		attempt_key = c.chr
 		xor_key     = (attempt_key * (enc.length / 2)).unpack('H*')[0]     # Repeat single-key to match size of ciphertext for XOR'ing.
 		ret_hex     = xor_hex(enc, xor_key)
 		plaintext   = [ret_hex].pack('H*')
-		
-		# Splits up given charset (common characters) into a regular expression for comparison against resulting plaintexts.
-		# 'ABC' => /A|B|C/i
-		regexpr = Regexp.union(charset.split(''))
-		regexpr = Regexp.new(regexpr.source, Regexp::IGNORECASE)
-	
 		score = plaintext.scan(regexpr).size    # Scans through the plaintext applying the regex; returns the number of matches.
 	
 		# Update solution data to match more promising solution (higher score).
@@ -57,3 +59,10 @@ open('http://cryptopals.com/static/challenge-data/4.txt') do |f|
 end
 
 output_solution(solution_data)
+
+# Output:
+# ------------------------------------------------------------------------
+# Key: 5
+# Ciphertext: 4e6f77207468617420746865207061727479206973206a756d70696e670a
+# Plaintext: Now that the party is jumping
+# ------------------------------------------------------------------------

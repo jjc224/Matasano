@@ -1,24 +1,25 @@
+# Challenge 3: break single-byte XOR cipher by devising a method of 'scoring' a piece of English plaintext (character frequency as a metric).
+# Highest score is the most promising solution.
+
 def xor_hex(a, b)
 	return if a.length != b.length
 	(a.hex ^ b.hex).to_s(16)
 end
 
 def xor_brute(enc, charset)
-	solution_data = Hash.new
-	solution_data['score'] = 0
+	solution_data = {'score' => 0}
+	
+	# Splits up given charset (common characters) into a regular expression for comparison against resulting plaintexts.
+	# 'ABC' => /A|B|C/i
+	regexpr = Regexp.union(charset.split(''))
+	regexpr = Regexp.new(regexpr.source, Regexp::IGNORECASE)
 	
 	(1..255).each do |c|
 		attempt_key = c.chr
 		xor_key     = (attempt_key * (enc.length / 2)).unpack('H*')[0]     # Repeat single-key to match size of ciphertext for XOR'ing.
 		ret_hex     = xor_hex(enc, xor_key)
 		plaintext   = [ret_hex].pack('H*')
-		
-		# Splits up given charset (common characters) into a regular expression for comparison against resulting plaintexts.
-		# 'ABC' => /A|B|C/i
-		regexpr = Regexp.union(charset.split(''))
-		regexpr = Regexp.new(regexpr.source, Regexp::IGNORECASE)
-	
-		score = plaintext.scan(regexpr).size    # Scans through the plaintext applying the regex; returns the number of matches.
+		score       = plaintext.scan(regexpr).size    # Scans through the plaintext applying the regex; returns the number of matches.
 	
 		# Update solution data to match more promising solution (higher score).
 		if score > solution_data['score']
@@ -46,3 +47,10 @@ charset       = 'ETAOIN SHRDLU'    # Frequency analysis: 12 most common characte
 solution_data = xor_brute(enc, charset)
 
 output_solution(solution_data)
+
+# Output:
+# --------------------------------------------------------------------------------
+# Key: X
+# Ciphertext: 436f6f6b696e67204d432773206c696b65206120706f756e64206f66206261636f6e
+# Plaintext: Cooking MC's like a pound of bacon
+# --------------------------------------------------------------------------------
