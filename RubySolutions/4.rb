@@ -21,7 +21,7 @@ def xor_brute(enc, charset)
 		xor_key     = (attempt_key * (enc.length / 2)).unpack('H*')[0]     # Repeat single-key to match size of ciphertext for XOR'ing.
 		ret_hex     = xor_hex(enc, xor_key)
 		plaintext   = [ret_hex].pack('H*')
-		score = plaintext.scan(regexpr).size    # Scans through the plaintext applying the regex; returns the number of matches.
+		score       = plaintext.scan(regexpr).size    # Scans through the plaintext applying the regex; returns the number of matches.
 	
 		# Update solution data to match more promising solution (higher score).
 		if score > solution_data['score']
