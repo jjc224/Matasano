@@ -1,6 +1,6 @@
 # Challenge 2: write a function that takes two equal-length buffers and produces their XOR combination.
 def xor_hex(a, b)
-	return if a.length != b.length
+	raise "Unequal buffers passed." if a.length != b.length
 	(a.hex ^ b.hex).to_s(16)
 end
 

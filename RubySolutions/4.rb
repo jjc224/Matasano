@@ -4,7 +4,7 @@
 require 'open-uri'
 
 def xor_hex(a, b)
-	return if a.length != b.length
+	raise "Unequal buffers passed." if a.length != b.length
 	(a.hex ^ b.hex).to_s(16)
 end
 
@@ -44,21 +44,27 @@ def output_solution(solution = {}, opts = {})
 	puts "Score: #{solution['score']}" if opts[:with_score]
 end
 
-charset       = 'ETAOIN SHRDLU'    # Frequency analysis: 12 most common characters in the English language.
-solution_data = {'score' => 0}
-
-open('http://cryptopals.com/static/challenge-data/4.txt') do |f|
-	f.each_line do |line|
-		line.strip!
-		temp = xor_brute(line, charset)
-
-		if temp['score'] > solution_data['score']
-			solution_data = temp
+def read_each_line(url)
+	open(url) do |f|
+		f.each_line do |line|
+			line.strip!
+			yield(line)
 		end
 	end
 end
 
-output_solution(solution_data)
+charset       = 'ETAOIN SHRDLU'    # Frequency analysis: 12 most common characters in the English language.
+solution_data = {'score' => 0}
+
+read_each_line('http://cryptopals.com/static/challenge-data/4.txt') do |line|
+	temp = xor_brute(line, charset)
+		
+	if temp['score'] > solution_data['score']
+		solution_data = temp
+	end
+end
+			
+output_solution(solution_data) unless solution_data.nil?
 
 # Output:
 # ------------------------------------------------------------------------
