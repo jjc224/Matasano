@@ -11,8 +11,7 @@ def read_each_line(url)
 end
 
 read_each_line('http://cryptopals.com/static/challenge-data/8.txt') do |line|
-	# Split into 16-byte blocks and check equality between them.
-	blocks      = line.scan(/.{1,32}/)    # Working with hex: a 16-byte block is represented as 32 characters.
+	blocks      = line.scan(/.{1,32}/)    # Split into 16-byte blocks; working with hex, so 32 characters.
 	blocks_dups = Hash.new
 	
 	# Iterate through the unique elements.
