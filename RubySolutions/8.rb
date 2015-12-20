@@ -15,7 +15,7 @@ read_each_line('http://cryptopals.com/static/challenge-data/8.txt') do |line|
 	blocks_dups = Hash.new
 	
 	# Iterate through the unique elements.
-	# Store the count of the duplicates in a hash for output.
+	# Store the count of each duplicate element in a hash for output.
 	blocks.uniq.select do |block|
 		count = blocks.count(block)
 		blocks_dups[block] = count if count > 1
