@@ -12,11 +12,6 @@ def xor_encrypt(plaintext, key)
 	ciphertext
 end
 
-def pkcs7_pad(str, blocksize)
-	padding = blocksize - (str.length % blocksize)
-	str << padding.chr * padding
-end
-
 def pkcs7_strip(str)
 	padding   = str[-1]
 	pad_start = str.length - padding.ord
