@@ -1,3 +1,5 @@
+# Challenge 10: implement CBC mode (AES-128).
+
 require 'open-uri'
 require 'base64'
 require 'openssl'
