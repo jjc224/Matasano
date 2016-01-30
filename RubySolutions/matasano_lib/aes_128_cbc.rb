@@ -20,8 +20,8 @@ module MatasanoLib
 
 					# Neglect the first block and iterate through the rest.
 					plain_blocks.shift
-					plain_blocks.each_with_index do |block, i|
-						xor_plain  = [XOR.crypt(plain_blocks[i], prev_block)].pack('H*')
+					plain_blocks.each do |curr_block|
+						xor_plain  = [XOR.crypt(curr_block, prev_block)].pack('H*')
 						prev_block = AES_128_ECB.encrypt(xor_plain, key)
 
 						ciphertext << prev_block
@@ -38,11 +38,11 @@ module MatasanoLib
 
 					# Neglect the first block and iterate through the rest.
 					enc_blocks.shift
-					enc_blocks.each_with_index do |block, i|
-						dec_block = AES_128_ECB.decrypt(enc_blocks[i], key)
+					enc_blocks.each do |curr_block|
+						dec_block = AES_128_ECB.decrypt(curr_block, key)
 						plaintext << [XOR.crypt(dec_block, prev_block)].pack('H*')
 
-						prev_block = enc_blocks[i]
+						prev_block = curr_block
 					end
 
 					PKCS7.strip(plaintext)
