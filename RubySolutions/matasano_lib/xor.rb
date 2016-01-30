@@ -1,7 +1,7 @@
 module MatasanoLib
 	module XOR
 		class << self
-			# 
+			# Operates XOR on two hex strings, and returns the result in hex format.
 			def hex(a, b)
 				raise "Unequal buffers passed." if a.length != b.length
 				(a.hex ^ b.hex).to_s(16)
