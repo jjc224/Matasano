@@ -31,7 +31,7 @@ module MatasanoLib
 				(1..255).each do |c|
 					attempt_key = c.chr
 					xor_key     = (attempt_key * (enc.length / 2)).unpack('H*')[0]     # Repeat single-key to match size of ciphertext for XOR'ing.
-					ret_hex     = MatasanoLib::XOR.hex(enc, xor_key)
+					ret_hex     = hex(enc, xor_key)
 					plaintext   = [ret_hex].pack('H*')
 					score       = plaintext.scan(regexpr).size    # Scans through the plaintext applying the regex; returns the number of matches.
 				
