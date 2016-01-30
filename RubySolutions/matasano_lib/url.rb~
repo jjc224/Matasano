@@ -2,7 +2,7 @@ require 'open-uri'
 require 'base64'
 
 module MatasanoLib
-	module URL
+	class URL
 		class << self
 			def read_each_line(url)
 				open(url) do |f|
