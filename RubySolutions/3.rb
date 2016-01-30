@@ -1,10 +1,7 @@
 # Challenge 3: break single-byte XOR cipher by devising a method of 'scoring' a piece of English plaintext (character frequency as a metric).
 # Highest score is the most promising solution.
 
-def xor_hex(a, b)
-	raise "Unequal buffers passed." if a.length != b.length
-	(a.hex ^ b.hex).to_s(16)
-end
+require_relative 'matasano_lib/xor'
 
 def xor_brute(enc, charset)
 	solution_data = {'score' => 0}
@@ -17,7 +14,7 @@ def xor_brute(enc, charset)
 	(1..255).each do |c|
 		attempt_key = c.chr
 		xor_key     = (attempt_key * (enc.length / 2)).unpack('H*')[0]     # Repeat single-key to match size of ciphertext for XOR'ing.
-		ret_hex     = xor_hex(enc, xor_key)
+		ret_hex     = MatasanoLib::XOR.hex(enc, xor_key)
 		plaintext   = [ret_hex].pack('H*')
 		score       = plaintext.scan(regexpr).size    # Scans through the plaintext applying the regex; returns the number of matches.
 	

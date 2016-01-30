@@ -12,13 +12,8 @@
 # 	7. Solve each block as if it was single-character XOR. You already have code to do this.
 # 	8. For each block, the single-byte XOR key that produces the best looking histogram is the repeating-key XOR key byte for that block. Put them together and you have the key.
 
-require 'open-uri'
-require 'base64'
-
-def xor_hex(a, b)
-	raise "Unequal buffers passed." if a.length != b.length
-	(a.hex ^ b.hex).to_s(16)
-end
+require_relative 'matasano_lib/url'
+require_relative 'matasano_lib/xor'
 
 def hamming_distance(a, b)
 	raise "Unequal buffers passed." if a.length != b.length
@@ -29,37 +24,6 @@ def hamming_distance(a, b)
 	end
 
 	ret.count('1')    # Return the number of set bits (the number of differing bits, as per XOR).
-end
-
-def xor_brute(enc, charset)
-	solution_data = Array.new
-	
-	# Splits up given charset (common characters) into a regular expression for comparison against resulting plaintexts.
-	# 'ABC' => /A|B|C/i
-	regexpr = Regexp.union(charset.split(''))
-	regexpr = Regexp.new(regexpr.source, Regexp::IGNORECASE)
-	
-	(1..255).each do |c|
-		attempt_key = c.chr
-		xor_key     = (attempt_key * (enc.length / 2)).unpack('H*')[0]     # Repeat single-key to match size of ciphertext for XOR'ing.
-		ret_hex     = xor_hex(enc, xor_key)
-		plaintext   = [ret_hex].pack('H*')
-		score       = plaintext.scan(regexpr).size    # Scans through the plaintext applying the regex; returns the number of matches.
-		
-		current_data = {'score' => 0}
-
-		# Update solution data to match more promising solution (higher score).
-		#if score > current_data[c - 1]['score']
-			current_data['score']      = score
-			current_data['key']        = attempt_key
-			current_data['ciphertext'] = ret_hex
-			current_data['plaintext']  = plaintext
-
-			solution_data << current_data
-		#end
-	end
-
-	solution_data
 end
 
 def output_solution(solution = {}, opts = {})
@@ -101,30 +65,30 @@ end
 solution_keys = [''] * transposed_blocks.size
 
 transposed_blocks.each_with_index do |block, i|
-	solution_data = xor_brute(block.unpack('H*')[0], charset)
-	solution_data = solution_data.max_by(keysize) { |h| h['score'] }
+	solution_data = MatasanoLib::XOR.brute(block.unpack('H*')[0], charset)
+	#solution_data = solution_data.max_by(keysize) { |h| h['score'] }
 
 	#solution_data.map { |x| p x }
 	#puts
 
 	#for i in (0..solution_keys.size) do
-		solution_data.each { |s| solution_keys[i] += s['key'] }
+		#solution_data.each { |s| solution_keys[i] += s['key'] }
 	#end
 
 	#solution_data.each { |solution| output_solution(solution, :key_only => true) }
-	#output_solution(xor_brute(block.unpack('H*')[0], charset))
+	#output_solution(MatasanoLib::XOR.brute(block.unpack('H*')[0], charset))
 end
 
-p solution_keys#.permutation(3).to_a
+# p solution_keys#.permutation(3).to_a
 
-thekey = 'SECRET'
-mykey  = ''
+#thekey = 'SECRET'
+# mykey  = ''
 
-for i in (0..enc.unpack('H*')[0].length / 2 - 1) do
-	mykey.concat(thekey[i % thekey.length])
-end
+#for i in (0..enc.unpack('H*')[0].length / 2 - 1) do
+#	mykey.concat(thekey[i % thekey.length])
+#end
 
-p xor_hex([enc].pack('H*'), [('X' * ([enc].pack('H*').length/2))].pack('H*'))
+#p MatasanoLib::XOR.hex([enc].pack('H*'), [('X' * ([enc].pack('H*').length/2))].pack('H*'))
 
 #hamdists.sort_by { |keysize, dist| dist }[0..2].each do |(keysize)|
 #	p keysize

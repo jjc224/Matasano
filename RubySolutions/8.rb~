@@ -1,7 +1,16 @@
 # Challenge 8: detect AES in ECB mode given a set of hex-encoded ciphertexts.
-require_relative 'matasano_lib/url'
+require 'open-uri'
 
-MatasanoLib::URL.read_each_line('http://cryptopals.com/static/challenge-data/8.txt') do |line|
+def read_each_line(url)
+	open(url) do |f|
+		f.each_line do |line|
+			line.strip!
+			yield(line)
+		end
+	end
+end
+
+read_each_line('http://cryptopals.com/static/challenge-data/8.txt') do |line|
 	blocks      = line.scan(/.{1,32}/)    # Split into 16-byte blocks; working with hex, so 32 characters.
 	blocks_dups = Hash.new
 	

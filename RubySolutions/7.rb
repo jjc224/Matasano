@@ -1,8 +1,7 @@
 # Challenge 7: decryption with AES in ECB mode under the key 'YELLOW SUBMARINE'.
 
-require 'open-uri'
-require 'base64'
 require 'openssl'
+require_relative 'matasano_lib/url'
 
 def aes_ecb_decrypt(enc, key)
 	decipher = OpenSSL::Cipher.new('AES-128-ECB')
@@ -13,7 +12,7 @@ def aes_ecb_decrypt(enc, key)
 	decipher.update(enc) + decipher.final
 end
 
-enc = Base64.decode64(open('http://cryptopals.com/static/challenge-data/7.txt') { |f| f.read }.strip!)
+enc = MatasanoLib::URL.decode64('http://cryptopals.com/static/challenge-data/7.txt')
 key = 'YELLOW SUBMARINE'
 
 puts aes_ecb_decrypt(enc, key)

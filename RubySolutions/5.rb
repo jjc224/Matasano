@@ -5,7 +5,7 @@
 def xor_encrypt(plaintext, key)
 	ciphertext = String.new
 
-	plaintext.split('').each_with_index do |c, i|
+	plaintext.chars.each_with_index do |c, i|
 		ciphertext << "%02x" % (c.bytes[0] ^ key[i % key.length].bytes[0])
 	end
 

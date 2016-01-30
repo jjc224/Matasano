@@ -1,8 +1,16 @@
-# Challenge 10: implement CBC mode (AES-128).
+require 'open-uri'
+require 'base64'
+require 'openssl'
 
-require_relative 'matasano_lib/url'
-require_relative 'matasano_lib/xor'
-require_relative 'matasano_lib/aes_128_ecb'
+def xor_encrypt(plaintext, key)
+	ciphertext = String.new
+
+	plaintext.split('').each_with_index do |c, i|
+		ciphertext << "%02x" % (c.bytes[0] ^ key[i % key.length].bytes[0])
+	end 
+
+	ciphertext
+end
 
 def pkcs7_strip(str)
 	padding   = str[-1]
@@ -12,17 +20,36 @@ def pkcs7_strip(str)
 	str[0..pad_start - 1]
 end
 
+def aes_ecb_encrypt(plaintext, key)
+	cipher = OpenSSL::Cipher.new('AES-128-ECB')
+		    
+	cipher.encrypt
+	cipher.key = key 
+				    
+	cipher.update(plaintext) + cipher.final
+end
+
+def aes_ecb_decrypt(enc, key)
+	cipher = OpenSSL::Cipher.new('AES-128-ECB')
+		    
+	cipher.decrypt
+	cipher.key = key 
+	cipher.padding = 0 
+				    
+	cipher.update(enc) + cipher.final
+end
+
 def aes_cbc_decrypt(enc, key, iv = "\0" * 16)    # 16 byte blocks (128-bit cipher).
 	enc_blocks = enc.scan(/.{1,16}/m)
-	dec_block  = MatasanoLib::AES_128_ECB.decrypt(enc_blocks[0], key)
-	plaintext  = [MatasanoLib::XOR.crypt(dec_block, iv)].pack('H*')
+	dec_block  = aes_ecb_decrypt(enc_blocks[0], key)
+	plaintext  = [xor_encrypt(dec_block, iv)].pack('H*')
 	prev_block = enc_blocks[0]
 
 	# Neglect the first block and iterate through the rest.
 	enc_blocks.shift
 	enc_blocks.each_with_index do |block, i|
-		dec_block = MatasanoLib::AES_128_ECB.decrypt(enc_blocks[i], key)
-		plaintext << [MatasanoLib::XOR.crypt(dec_block, prev_block)].pack('H*')
+		dec_block = aes_ecb_decrypt(enc_blocks[i], key)
+		plaintext << [xor_encrypt(dec_block, prev_block)].pack('H*')
 
 		prev_block = enc_blocks[i]
 	end
@@ -30,9 +57,8 @@ def aes_cbc_decrypt(enc, key, iv = "\0" * 16)    # 16 byte blocks (128-bit ciphe
 	pkcs7_strip(plaintext)
 end
 
-enc = MatasanoLib::URL.decode64('http://cryptopals.com/static/challenge-data/10.txt')
+enc = Base64.decode64(open('http://cryptopals.com/static/challenge-data/10.txt') { |f| f.read }.strip!)
 key = 'YELLOW SUBMARINE'
-
 puts aes_cbc_decrypt(enc, key)
 
 # Output:

@@ -1,40 +1,8 @@
 # Challenge 4: detect single-character XOR cipher amongst a file of 60 possible ciphertexts.
 # Additionally, let's break it. ;)
 
-require 'open-uri'
-
-def xor_hex(a, b)
-	raise "Unequal buffers passed." if a.length != b.length
-	(a.hex ^ b.hex).to_s(16)
-end
-
-def xor_brute(enc, charset)
-	solution_data = {'score' => 0}
-	
-	# Splits up given charset (common characters) into a regular expression for comparison against resulting plaintexts.
-	# 'ABC' => /A|B|C/i
-	regexpr = Regexp.union(charset.split(''))
-	regexpr = Regexp.new(regexpr.source, Regexp::IGNORECASE)
-	
-	(1..255).each do |c|
-		attempt_key = c.chr
-		xor_key     = (attempt_key * (enc.length / 2)).unpack('H*')[0]     # Repeat single-key to match size of ciphertext for XOR'ing.
-		ret_hex     = xor_hex(enc, xor_key)
-		plaintext   = [ret_hex].pack('H*')
-		score       = plaintext.scan(regexpr).size    # Scans through the plaintext applying the regex; returns the number of matches.
-	
-		# Update solution data to match more promising solution (higher score).
-		if score > solution_data['score']
-			solution_data['score']      = score
-			solution_data['key']        = attempt_key
-			solution_data['ciphertext'] = ret_hex
-			solution_data['plaintext']  = plaintext
-		end
-	end
-
-	return nil if solution_data['score'] == 0
-	solution_data
-end
+require_relative 'matasano_lib/url'
+require_relative 'matasano_lib/xor'
 
 def output_solution(solution = {}, opts = {})
 	puts "Key: #{solution['key']}"
@@ -44,20 +12,11 @@ def output_solution(solution = {}, opts = {})
 	puts "Score: #{solution['score']}" if opts[:with_score]
 end
 
-def read_each_line(url)
-	open(url) do |f|
-		f.each_line do |line|
-			line.strip!
-			yield(line)
-		end
-	end
-end
-
 charset       = 'ETAOIN SHRDLU'    # Frequency analysis: 12 most common characters in the English language.
 solution_data = {'score' => 0}
 
-read_each_line('http://cryptopals.com/static/challenge-data/4.txt') do |line|
-	temp = xor_brute(line, charset)
+MatasanoLib::URL.read_each_line('http://cryptopals.com/static/challenge-data/4.txt') do |line|
+	temp = MatasanoLib::XOR.brute(line, charset)
 		
 	if temp['score'] > solution_data['score']
 		solution_data = temp
