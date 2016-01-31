@@ -8,7 +8,7 @@ def pkcs7_strip(str)
 	padding   = str[-1]
 	pad_start = str.length - padding.ord
 
-	raise 'Bad padding.' if str[pad_start..-1] != padding * padding.ord
+	return str if str[pad_start..-1] != padding * padding.ord
 	str[0..pad_start - 1]
 end
 
@@ -17,16 +17,16 @@ def aes_cbc_decrypt(enc, key, iv = "\0" * 16)    # 16 byte blocks (128-bit ciphe
 	dec_block  = MatasanoLib::AES_128_ECB.decrypt(enc_blocks[0], key)
 	plaintext  = [MatasanoLib::XOR.crypt(dec_block, iv)].pack('H*')
 	prev_block = enc_blocks[0]
-
+	
 	# Neglect the first block and iterate through the rest.
 	enc_blocks.shift
-	enc_blocks.each_with_index do |block, i|
-		dec_block = MatasanoLib::AES_128_ECB.decrypt(enc_blocks[i], key)
+	enc_blocks.each do |curr_block|
+		dec_block = MatasanoLib::AES_128_ECB.decrypt(curr_block, key)
 		plaintext << [MatasanoLib::XOR.crypt(dec_block, prev_block)].pack('H*')
-
-		prev_block = enc_blocks[i]
+		
+		prev_block = curr_block
 	end
-
+	
 	pkcs7_strip(plaintext)
 end
 
