@@ -4,7 +4,7 @@ require 'securerandom'
 require_relative 'matasano_lib/aes_128_ecb'
 require_relative 'matasano_lib/aes_128_cbc'
 
-def random_aes_key    # Generates a random 128-BIT AES key.
+def random_aes_key    # Generates a random 128-bit AES key.
 	SecureRandom.random_bytes
 end
 
