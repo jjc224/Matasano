@@ -69,15 +69,15 @@ puts "[+] Decrypting..."
 	block = encryption_oracle(input)[0...secret_len]
 	
 	# If nothing was found, we're most likely done (or something unexpected occurred).
-	if dictionary[block].nil?
-		puts "[+] Done.", "\n"
-		break
-	end
+	break if dictionary[block].nil?
 
 	input.slice!(0)                   # Reduce the A's by one, shifting left.
 	decrypted << dictionary[block]    # Append decrypted data for next iteration (and, ideally, output).
+
+	break if decrypted.length == secret_len
 end
 
+puts '[+] Done.', "\n"
 puts decrypted
 
 # Output
