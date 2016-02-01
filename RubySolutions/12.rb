@@ -38,8 +38,7 @@ cipher_mode = MatasanoLib::AES_128_ECB.detect_mode(input)
 # 4. Make a dictionary of every possible last byte by feeding different strings to the oracle; for instance, "AAAAAAAA", "AAAAAAAB", "AAAAAAAC", remembering the first block of each invocation.
 # 5. Match the output of the one-byte-short input to one of the entries in your dictionary. You've now discovered the first byte of unknown-string.
 # 6. Repeat for the next byte.
-decrypted   = ''
-
+decrypted  = ''
 secret_len = encryption_oracle('').length    # If we don't put anything in the oracle, then that must be how much we roughly need to decrypt.
 input      = 'A' * (secret_len - 1)
 num_blocks = secret_len / blocksize
