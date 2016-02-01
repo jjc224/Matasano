@@ -58,7 +58,7 @@ puts "[+] Decrypting..."
 		char = c.chr
 
 		# A's + decrypted data thus far + next possible byte.
-		# # secret_len = blocksize * num_blocks.
+		# secret_len = blocksize * num_blocks.
 		block = encryption_oracle(input + decrypted + char)[0...secret_len]
 
 		# Key = ciphertext, value = next possible byte of secret.
