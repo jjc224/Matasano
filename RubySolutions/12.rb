@@ -53,7 +53,7 @@ puts "[+] Decrypting..."
 0.upto(secret_len - 1) do |i|
 	dictionary = {}
 
-	# Populate the hash table (dictionary) with all 256 possible bytes.
+	# Populate the hash table (dictionary) with all 256 possible ciphertexts => bytes.
 	(0..255).each do |c|
 		char = c.chr
 
