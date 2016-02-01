@@ -41,13 +41,15 @@ input = 'A' * (blocksize - 1)
 # 5. Match the output of the one-byte-short input to one of the entries in your dictionary. You've now discovered the first byte of unknown-string.
 # 6. Repeat for the next byte.
 decrypted   = ''
-blocks_read = 0
 
 secret_len = encryption_oracle('').length    # If we don't put anything in the oracle, then that must be how much we roughly need to decrypt.
 input      = 'A' * (secret_len - 1)
 num_blocks = secret_len / blocksize
 
+puts "[+] Detected blocksize: #{blocksize}"
+puts "[+] Detected cipher mode: #{cipher_mode}"
 puts "[+] There appears to be up to #{num_blocks} blocks of data to decrypt (#{secret_len} bytes)."
+puts "[+] Decrypting..."
 
 # At worst case, we will have secret_len iterations (best case being secret_len - blocksize).
 # This is due to the way padding is done.
@@ -84,12 +86,15 @@ puts decrypted
 # Output
 # ~/C/M/Ruby> time ruby 12.rb
 # ----------------------------------------------------------------------
+# [+] Detected blocksize: 16
+# [+] Detected cipher mode: ECB
 # [+] There appears to be up to 9 blocks of data to decrypt (144 bytes).
+# [+] Decrypting...
 # [+] Done.
-#
+# 
 # Rollin' in my 5.0
 # With my rag-top down so my hair can blow
 # The girlies on standby waving just to say hi
 # Did you stop? No, I just drove by
 #
-#         0.68 real         0.63 user         0.02 sys
+#         0.60 real         0.55 user         0.02 sys
