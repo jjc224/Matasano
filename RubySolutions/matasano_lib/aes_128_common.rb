@@ -19,5 +19,17 @@ module MatasanoLib
 			
 			blocks_dups.empty? ? 'CBC' : 'ECB'
 		end
+
+		def determine_blocksize(char = 'A')
+			input     = char
+			curr_size = yield(input).length
+			
+			loop do
+				input << char
+				break if yield(input).length > curr_size
+			end
+			
+			yield(input).length - curr_size 
+		end
 	end
 end
