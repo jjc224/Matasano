@@ -8,9 +8,8 @@ def pkcs7_validate_and_strip(str)
 	MatasanoLib::PKCS7.strip(str)
 end
 
-msg       = 'jaz0r'
-input     = MatasanoLib::PKCS7.pad(msg)
-blocksize = 16
+msg   = 'jaz0r'
+input = MatasanoLib::PKCS7.pad(msg)
 
 # p pkcs7_validate_and_strip(input)           # "jaz0r"
 # p pkcs7_validate_and_strip(input[0..-1])    # Bad padding. (RuntimeError)

@@ -1,3 +1,4 @@
+require_relative 'monkey_patch'
 require_relative 'aes_128_common'
 require_relative 'aes_128_ecb'
 require_relative 'xor'
@@ -11,41 +12,40 @@ module MatasanoLib
 			@@blocksize = 16
 
 			def encrypt(plaintext, key, iv = "\0" * @@blocksize)
-					plaintext = PKCS7.pad(plaintext)
+				plaintext    = PKCS7.pad(plaintext)
+				plain_blocks = plaintext.chunk(@@blocksize)
+				xor_plain    = XOR.crypt(plain_blocks[0], iv).unhex
+				prev_block   = AES_128_ECB.encrypt(xor_plain, key)
+				ciphertext   = prev_block
 
-					plain_blocks = plaintext.scan(/.{1,#{@@blocksize}}/m)
-					xor_plain    = [XOR.crypt(plain_blocks[0], iv)].pack('H*')
-					prev_block   = AES_128_ECB.encrypt(xor_plain, key)
-					ciphertext   = prev_block
+				# Neglect the first block and iterate through the rest.
+				plain_blocks.shift
+				plain_blocks.each do |curr_block|
+					xor_plain  = XOR.crypt(curr_block, prev_block).unhex
+					prev_block = AES_128_ECB.encrypt(xor_plain, key)
 
-					# Neglect the first block and iterate through the rest.
-					plain_blocks.shift
-					plain_blocks.each do |curr_block|
-						xor_plain  = [XOR.crypt(curr_block, prev_block)].pack('H*')
-						prev_block = AES_128_ECB.encrypt(xor_plain, key)
+					ciphertext << prev_block
+				end
 
-						ciphertext << prev_block
-					end
-
-					ciphertext
+				ciphertext
 			end
 
 			def decrypt(enc, key, iv = "\0" * @@blocksize)
-					enc_blocks = enc.scan(/.{1,#{@@blocksize}}/m)
-					dec_block  = AES_128_ECB.decrypt(enc_blocks[0], key)
-					plaintext  = [XOR.crypt(dec_block, iv)].pack('H*')
-					prev_block = enc_blocks[0]
+				enc_blocks = enc.chunk(@@blocksize)
+				dec_block  = AES_128_ECB.decrypt(enc_blocks[0], key)
+				plaintext  = XOR.crypt(dec_block, iv).unhex
+				prev_block = enc_blocks[0]
 
-					# Neglect the first block and iterate through the rest.
-					enc_blocks.shift
-					enc_blocks.each do |curr_block|
-						dec_block = AES_128_ECB.decrypt(curr_block, key)
-						plaintext << [XOR.crypt(dec_block, prev_block)].pack('H*')
+				# Neglect the first block and iterate through the rest.
+				enc_blocks.shift
+				enc_blocks.each do |curr_block|
+					dec_block = AES_128_ECB.decrypt(curr_block, key)
+					plaintext << XOR.crypt(dec_block, prev_block).unhex
 
-						prev_block = curr_block
-					end
+					prev_block = curr_block
+				end
 
-					PKCS7.strip(plaintext)
+				PKCS7.strip(plaintext)
 			end
 		end
 	end

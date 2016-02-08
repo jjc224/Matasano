@@ -2,6 +2,7 @@
 
 require 'base64'
 require_relative 'matasano_lib/aes_128_ecb'
+require_relative 'matasano_lib/monkey_patch'
 
 $ORACLE_PREFIX = SecureRandom.random_bytes(rand(0..64))
 $ORACLE_KEY    = MatasanoLib::AES_128_ECB.random_key
@@ -34,7 +35,7 @@ def determine_prefix_length
 	blocksize  = determine_blocksize
 	input      = 'A' * blocksize * 3    # 48 A's.
 	ciphertext = encryption_oracle(input)
-	blocks     = ciphertext.unpack('H*')[0].scan(/.{1,#{blocksize * 2}}/)
+	blocks     = ciphertext.chunk(blocksize).to_hex
 	index      = 0
 	
 	# Obtain the index of the first duplicate block.
@@ -53,7 +54,7 @@ def determine_prefix_length
 	# This will then be used as an offset (see loop above), which give us the length of the prefix.
 	loop do
 		ciphertext = encryption_oracle(input)
-		blocks     = ciphertext.unpack('H*')[0].scan(/.{1,#{blocksize * 2}}/)
+		blocks     = ciphertext.chunk(blocksize).to_hex
 		dup_count  = blocks.size - blocks.uniq.size
 		duplicates = dup_count > 0 
 

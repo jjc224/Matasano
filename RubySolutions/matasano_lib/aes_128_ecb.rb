@@ -14,7 +14,8 @@ module MatasanoLib
 				cipher.key = key 
 				cipher.padding = 0
 
-				cipher.update(PKCS7.pad(plaintext)) #+ cipher.final
+				plaintext = PKCS7.pad(plaintext)
+				cipher.update(plaintext) + cipher.final
 			end
 
 			def decrypt(enc, key)

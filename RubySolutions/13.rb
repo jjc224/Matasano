@@ -1,5 +1,6 @@
 # Challenge 13: ECB cut-and-paste.
 require_relative 'matasano_lib/aes_128_ecb'
+require_relative 'matasano_lib/monkey_patch'
 
 # Key/value parser of form: foo=bar&baz=qux&zap=zazzle
 def kv_parser(data)
@@ -47,14 +48,14 @@ end
 #              'c3d06713dce2fb5b31d3f425a770e1d5', '30e3074d6e2e7f5b0fc4c78fe03be512'    # This final block is the 'admin' block, replacing 'user'.
 #          ]
 
-key         = ['ee78012a6846ef0470fb6e87f9d5fd7b'].pack('H*')
-admin_block = ['30e3074d6e2e7f5b0fc4c78fe03be512'].pack('H*')
+key         = 'ee78012a6846ef0470fb6e87f9d5fd7b'.unhex
+admin_block = '30e3074d6e2e7f5b0fc4c78fe03be512'.unhex
 email       = 'soz@jaz0r.com'     # Previously: 'AAAAAAAAAA' << 'admin' << "\x0b" * 11 + 'AAA'
 enc_email   = encrypt_profile(email, key)
 
 blocksize  = MatasanoLib::AES_128_ECB.determine_blocksize { |input| encrypt_profile(input, key) }
 attack     = enc_email[0...-blocksize] << admin_block
-ciphertext = attack.unpack('H*')[0].scan(/.{1,#{blocksize * 2}}/)
+ciphertext = attack.chunk(blocksize).to_hex
 dec_email  = decrypt_profile(attack, key)
 
 puts "Ciphertext: #{ciphertext}", "\n"

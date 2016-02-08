@@ -4,8 +4,8 @@ module MatasanoLib
 			@@blocksize = 16
 
 			def pad(str, blocksize = @@blocksize)
-				padding = blocksize - (str.length % blocksize)
-				str << padding.chr * padding
+				padding = (blocksize - (str.length % blocksize)) % blocksize
+				str + padding.chr * padding
 			end
 
 			def valid(str)
