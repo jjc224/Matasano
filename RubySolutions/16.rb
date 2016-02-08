@@ -51,7 +51,7 @@ enc = encrypt_request(evil)
 # A = Unknown byte.
 #
 # We know that P = C ^ A, which means A = C ^ P.
-# Let A' = (A ^ C ^ P) = 0, then we can set A' = (A' ^ X) = X for any desired X.
+# Let A' = (A ^ C ^ P) = (A ^ A) = 0, then we can set A' = (A' ^ X) = X for any desired X.
 flipper = ->(c, p, a) { (c.bytes[0] ^ p.ord ^ a.ord).chr }
 
 enc[32 + 5]  = flipper.call(enc[32 + 5],  '~', ';')
