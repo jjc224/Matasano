@@ -11,11 +11,12 @@ module MatasanoLib
 
 			@@blocksize = 16
 
-			def encrypt(plaintext, key, iv = "\0" * @@blocksize)
+			def encrypt(plaintext, key, opts = {})
+				opts         = {iv: "\0" * @@blocksize} if opts.empty?
 				plaintext    = PKCS7.pad(plaintext)
 				plain_blocks = plaintext.chunk(@@blocksize)
-				xor_plain    = XOR.crypt(plain_blocks[0], iv).unhex
-				prev_block   = AES_128_ECB.encrypt(xor_plain, key)
+				xor_plain    = XOR.crypt(plain_blocks[0], opts[:iv]).unhex
+				prev_block   = AES_128.encrypt(xor_plain, key, :ECB, padded: false)
 				ciphertext   = prev_block
 
 				# Neglect the first block and iterate through the rest.
@@ -30,16 +31,17 @@ module MatasanoLib
 				ciphertext
 			end
 
-			def decrypt(enc, key, iv = "\0" * @@blocksize)
+			def decrypt(enc, key, opts = {})
+				opts       = {iv: "\0" * @@blocksize} if opts.empty?
 				enc_blocks = enc.chunk(@@blocksize)
-				dec_block  = AES_128_ECB.decrypt(enc_blocks[0], key)
-				plaintext  = XOR.crypt(dec_block, iv).unhex
+				dec_block  = AES_128.decrypt(enc_blocks[0], key, :ECB, padded: false)
+				plaintext  = XOR.crypt(dec_block, opts[:iv]).unhex
 				prev_block = enc_blocks[0]
 
 				# Neglect the first block and iterate through the rest.
 				enc_blocks.shift
 				enc_blocks.each do |curr_block|
-					dec_block = AES_128_ECB.decrypt(curr_block, key)
+					dec_block = AES_128.decrypt(curr_block, key, :ECB)
 					plaintext << XOR.crypt(dec_block, prev_block).unhex
 
 					prev_block = curr_block
