@@ -45,7 +45,8 @@ module MatasanoLib
 					prev_block = curr_block
 				end
 
-				PKCS7.strip(plaintext)
+				#PKCS7.strip(plaintext)
+				plaintext
 			end
 		end
 	end

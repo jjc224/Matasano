@@ -22,12 +22,12 @@ end
 
 # If you've written the first function properly, it should not be possible to provide user input to it that will generate the string the second function is looking for.
 # We'll have to break the crypto to do that.
-# 
+#
 # Instead, modify the ciphertext (without knowledge of the AES key) to accomplish this.
-# 
+#
 # You're relying on the fact that in CBC mode, a 1-bit error in a ciphertext block:
-# 	1. Completely scrambles the block the error occurs in.
-# 	2. produces the identical 1-bit error(/edit) in the next ciphertext block.
+#	1. Completely scrambles the block the error occurs in.
+#	2. produces the identical 1-bit error(/edit) in the next ciphertext block.
 
 blocksize = MatasanoLib::AES_128_CBC.determine_blocksize { |input| encrypt_request(input) }
 
@@ -60,7 +60,7 @@ enc[32 + 11] = flipper.call(enc[32 + 11], '|', '=')
 puts is_admin?(enc) ? '[+] Welcome, admin!' : "[-] User just ain't good enough."
 
 # Output:
-# ~/C/M/Ruby> ruby 16.rb 
+# ~/C/M/Ruby> ruby 16.rb
 # ----------------------
 # [+] Welcome, admin!
 

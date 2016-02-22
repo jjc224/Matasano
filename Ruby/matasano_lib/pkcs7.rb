@@ -4,7 +4,7 @@ module MatasanoLib
 			@@blocksize = 16
 
 			def pad(str, blocksize = @@blocksize)
-				padding = (blocksize - (str.length % blocksize)) % blocksize
+				padding = blocksize - (str.length % blocksize)
 				str + padding.chr * padding
 			end
 
@@ -12,7 +12,7 @@ module MatasanoLib
 				padding   = str[-1]
 				pad_start = str.length - padding.ord
 
-				return str[pad_start..-1] == padding * padding.ord
+				str[pad_start..-1] == padding * padding.ord
 			end
 
 			def strip(str, blocksize = @@blocksize)
