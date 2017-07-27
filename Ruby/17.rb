@@ -1,7 +1,7 @@
 # Challenge 17: CBC padding oracle attack.
 
 require_relative 'matasano_lib/monkey_patch'
-require_relative 'matasano_lib/aes_128_cbc'
+require_relative 'matasano_lib/aes_128'
 require_relative 'matasano_lib/pkcs7'
 
 $AES_KEY = '0f40cc1380ee2f11467db661d7cc4748'.unhex
@@ -22,27 +22,26 @@ def random_ciphertext
 
 	str = rand_strings.sample.decode64
 	iv  = 'YELLOW SUBMARINE'
-	enc = MatasanoLib::AES_128_CBC.encrypt(str, $AES_KEY, iv)
+	enc = MatasanoLib::AES_128.encrypt(str, $AES_KEY, :CBC, iv: iv)
 
 	# Provide the caller the ciphertext and IV.
 	[enc, iv]
 end
 
 def padding_oracle(ciphertext, iv)
-	plaintext = MatasanoLib::AES_128_CBC.decrypt(ciphertext, $AES_KEY, iv)
+	plaintext = MatasanoLib::AES_128.decrypt(ciphertext, $AES_KEY, :CBC, iv: iv)
 	p plaintext.chunk(16)
 	MatasanoLib::PKCS7.valid(plaintext)
 end
 
-blocksize = 16
-enc, iv   = random_ciphertext
-
+blocksize  = 16
+enc, iv    = random_ciphertext
 
 0.upto(255) do |i|
-	ciphertext = "\0" * (blocksize - 1) << i.chr
-	ciphertext << enc
+	evil       = "\0" * (blocksize - 1) << "\0"
+	ciphertext = enc[0...-blocksize] + evil + enc[-blocksize..-1]    # 'evil' a block before the final block, to tamper with the padding.
+	#p ciphertext.chunk(16)
+	result     = padding_oracle(ciphertext, iv)
 
-	result = padding_oracle(ciphertext, iv)
-
-	puts "#{i}: #{result.to_s}"
+	puts "#{i}: #{result.to_s}" if result
 end

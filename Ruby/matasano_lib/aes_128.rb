@@ -5,6 +5,8 @@ require_relative 'aes_128_crt'
 module MatasanoLib
 	module AES_128
 		class << self
+			include AES_128_COMMON
+
 			def encrypt(plaintext, key, mode, opts = {})
 				ciphertext = case mode
 					     when :ECB then AES_128_ECB.encrypt(plaintext, key, opts)
