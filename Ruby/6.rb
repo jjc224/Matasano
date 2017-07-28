@@ -1,4 +1,4 @@
-# Challenge 5: break/decrypt repeating-key XOR cipher.
+# Challenge 6: break/decrypt repeating-key XOR cipher.
 
 #	1. Let KEYSIZE be the guessed length of the key; try values from 2 to (say) 40.
 #	2. Write a function to compute the edit distance/Hamming distance between two strings. The Hamming distance is just the number of differing bits.
