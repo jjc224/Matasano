@@ -35,12 +35,16 @@ hamdists = Hash.new
 	distance  = hamming_distance(enc[0..keysize], enc[keysize..keysize * 2])
 	distance += hamming_distance(enc[keysize..keysize * 2], enc[keysize * 2..keysize * 3])
 	distance += hamming_distance(enc[keysize..keysize * 3], enc[keysize * 2..keysize * 4])
-	distance /= 4
+	distance /= 3
 
 	hamdists[keysize] = (distance.to_f / keysize)
 end
 
-keysize           = hamdists.sort_by { |keysize, dist| dist }.first[0]
+keysize           = hamdists.sort_by { |keysize, dist| dist }#.first[0]
+
+keysize.map { |x| p x }
+exit
+
 enc_blocks        = enc.chunk(keysize)    # Raw chunks each of size 'keysize' (step 5).
 transposed_blocks = [''] * keysize
 
