@@ -40,11 +40,7 @@ hamdists = Hash.new
 	hamdists[keysize] = (distance.to_f / keysize)
 end
 
-keysize           = hamdists.sort_by { |keysize, dist| dist }#.first[0]
-
-keysize.map { |x| p x }
-exit
-
+keysize           = hamdists.sort_by { |keysize, dist| dist }.first[0]
 enc_blocks        = enc.chunk(keysize)    # Raw chunks each of size 'keysize' (step 5).
 transposed_blocks = [''] * keysize
 
