@@ -63,12 +63,12 @@ puts 'Parsed profile:', kv_parser(dec_email)
 
 # Output:
 # ------------------------------------------------------------------------------------------------------------------------
-# ~/C/M/Ruby> ruby 13.rb 
+# ~/C/M/Ruby> ruby 13.rb
 # Ciphertext: ["34dbb50a5b4236edd6f7bfec694ddad8", "4e185db1466566ea36b990845254fb97", "30e3074d6e2e7f5b0fc4c78fe03be512"]
 #
 # Parsed profile:
 # {
-# 	email: 'soz@jaz0r.com',
-# 	uid: '10',
-# 	role: 'admin'
+#	email: 'soz@jaz0r.com',
+#	uid: '10',
+#	role: 'admin'
 # }
