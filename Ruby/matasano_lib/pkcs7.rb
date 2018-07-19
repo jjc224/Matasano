@@ -12,7 +12,7 @@ module MatasanoLib
 				padding   = str[-1]
 				pad_start = str.length - padding.ord
 
-				str[pad_start..-1] == padding * padding.ord
+				pad_start < str.length && str[pad_start..-1] == padding * padding.ord
 			end
 
 			def strip(str, blocksize = @@blocksize)
