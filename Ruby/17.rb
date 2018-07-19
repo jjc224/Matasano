@@ -33,43 +33,90 @@ def padding_oracle(ciphertext, iv)
 	MatasanoLib::PKCS7.valid(plaintext)
 end
 
-def get_previous_byte(iv, enc)
-	blocksize  = 16
-	enc, iv    = random_ciphertext
+def get_previous_byte(iv, enc, dec, cpp)
+#	pos    = knownI.size + 1
+#	prefix = "\0" * (16 - pos)
+#
+#	1.upto(255) do |i|
+#		c1  = enc.size > 16 ? enc[-32...-16] : iv
+#		c1p = prefix + i.chr + knownI.bytes.map { |i| (i ^ pos).chr }.join
+#		sp  = enc[0...-32] + c1p + enc[-16..-1]
+#
+#		if padding_oracle(sp, iv)
+#			iPrev = i ^ pos
+#			pPrev = c1[-pos].ord ^ iPrev
+#
+#			return iPrev.chr + knownI, pPrev.chr + knownP
+#		end
+#	end
 
-	blocks = enc.chunk(16)
-	dec    = ''
-	pos    = dec.size + 1
-	prefix = "\0" * (16 - pos)
+	byte = 0
 
-	while i <= 0xff
-		evil = "\0" * (blocksize - dec.size - 1) << i.chr << "\0" * dec.size
+	# P'2 = D(C2) ^ C'
+	# C2  = E(P2 ^ C1)
+	# P'2 = D(E(P2 ^ C1)) ^ C'
+	# P'2 = P2 ^ C1 ^ C' (as D(E(x)) = x)
+	# P2  = P'2 ^ C1 ^ C' (as per commutativity)
+	# C'  = P'2 ^ P2 ^ C1 (as per commutativity)
+	1.upto(255) do |i|
+		blocks = enc.chunk(16)
+		pos    = dec.size + 1
 
-		if dec.size == 1
-			evil[-1] = (pos ^ byte ^ blocks[-2][-1].ord).chr
-		end
+		#evil = "\0" * (blocksize - dec.size - 1) << i.chr << "\0" * dec.size
+		prefix = "\0" * (16 - pos)
+		evil   = prefix + i.chr + cpp
 
-		ciphertext    = evil + enc[-blocksize..-1]    # 'evil' a block before the final block, to tamper with the padding.
-		valid_padding = padding_oracle(ciphertext, iv)
+		#evil   = prefix + i.chr + MatasanoLib::XOR.crypt(dec, pos.chr).unhex
 
-		# P'2 = D(C2) ^ C'
-		# C2  = E(P2 ^ C1)
-		# P'2 = D(E(P2 ^ C1)) ^ C'
-		# P'2 = P2 ^ C1 ^ C' (as D(E(x)) = x)
-		# P2  = P'2 ^ C1 ^ C' (as per commutativity)
-		# C'  = P'2 ^ P2 ^ C1 (as per commutativity)
+		ciphertext    = evil + blocks[-1]    # 'evil' a block before the final block, to tamper with the padding.
+		valid_padding = padding_oracle(ciphertext, iv)    #
+
 		if valid_padding
-			byte = pos ^ blocks[-2][-pos].ord ^ evil[-pos].ord
+			byte = pos ^ blocks[-2][-pos].ord ^ evil[-pos].ord    # P2 = P'2 ^ C1 ^ C' (as per commutativity)
 
-			dec.prepend(byte.chr)    # TODO: slow.
-			p dec.bytes
-
-			i = 1
-			exit if dec.size == 2
+			return byte.chr + dec, evil[-pos] + cpp
 		end
 
-		i += 1
+		#byte = evil
 	end
+
+	#p byte
 end
 
+def get_last_block(iv, enc)
+	enc, iv = random_ciphertext
+
+	dec = ''
+	cpp = ''
+
+	2.times do |i|
+		dec, cpp = get_previous_byte(iv, enc, dec, cpp)
+	end
+
+	dec
+end
+
+p get_last_block(*random_ciphertext)
+
+#def get_last_block(iv, enc)
+#	knownI = ''
+#	knownP = ''
+#
+#	(0...16).each do
+#		knownI, knownP = get_previous_byte(iv, enc, knownI, knownP)
+#	end
+#
+#	knownP
+#end
+#
+#def decipher(iv, enc)
+#	knownP = ''
+#
+#	(enc.size / 16).times do |i|
+#		st = (i == 0) ? enc : enc[0...-i * 16]
+#		knownP = get_last_block(iv, enc) + knownP
+#	end
+#
+#	MatasanoLib::PKCS7.strip(knownP)
+#end
 
