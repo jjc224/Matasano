@@ -22,12 +22,12 @@ end
 def determine_blocksize(char = 'A')
 	input     = char
 	curr_size = encryption_oracle(input).length
-	
+
 	loop do
 		input << char
 		break if encryption_oracle(input).length > curr_size
 	end
-	
+
 	encryption_oracle(input).length - curr_size
 end
 
@@ -37,7 +37,7 @@ def determine_prefix_length
 	ciphertext = encryption_oracle(input)
 	blocks     = ciphertext.chunk(blocksize).to_hex
 	index      = 0
-	
+
 	# Obtain the index of the first duplicate block.
 	# This is used to help us determine the amount of blocks roughly (due to input -- *offset*) our input begins.
 	blocks.each_with_index do |block, i|
@@ -56,7 +56,7 @@ def determine_prefix_length
 		ciphertext = encryption_oracle(input)
 		blocks     = ciphertext.chunk(blocksize).to_hex
 		dup_count  = blocks.size - blocks.uniq.size
-		duplicates = dup_count > 0 
+		duplicates = dup_count > 0
 
 		break if !duplicates || input.empty?
 		input.slice!(0)
@@ -115,9 +115,9 @@ puts "[+] Decrypting..."
 		# Possible to experience collisions (i.e. not 1-1 mapping), but fairly unlikely. Let's hope not.
 		dictionary[block] = char
 	end
-					
+
 	block = encryption_oracle(input)[prefix_len, secret_len]
-	
+
 	# If nothing was found, we're most likely done (or something unexpected occurred).
 	break if dictionary[block].nil?
 
@@ -139,7 +139,7 @@ puts decrypted
 # [+] There appears to be up to 10 blocks of data to decrypt (160 bytes).
 # [+] Decrypting...
 # [+] Done.
-# 
+#
 # Rollin' in my 5.0
 # With my rag-top down so my hair can blow
 # The girlies on standby waving just to say hi

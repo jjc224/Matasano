@@ -5,9 +5,11 @@
 
 require_relative 'matasano_lib/monkey_patch'
 require_relative 'matasano_lib/aes_128'
+require_relative 'matasano_lib/aes_128_common'
 require_relative 'matasano_lib/pkcs7'
 
-$AES_KEY = '0f40cc1380ee2f11467db661d7cc4748'.unhex
+$AES_KEY   = '0f40cc1380ee2f11467db661d7cc4748'.unhex
+$BLOCKSIZE = 16
 
 def random_ciphertext
 	rand_strings = [
@@ -71,8 +73,8 @@ end
 # P'2 = P2 ^ C1 ^ C'  (as D(E(x)) = x)
 # P2  = P'2 ^ C1 ^ C' (as per commutativity)
 # C'  = P'2 ^ P2 ^ C1 (as per commutativity)
-def get_previous_byte(enc, iv, dec, cpp)
-	blocks = enc.chunk(16)
+def get_previous_byte(enc, iv, dec)
+	blocks = enc.chunk($BLOCKSIZE)
 	pos    = dec.size + 1    # Position of next byte that will be flipped by x for all x in [0, 255]) to a padding byte.
 
 	flip = ''
@@ -85,11 +87,10 @@ def get_previous_byte(enc, iv, dec, cpp)
 		          .pack('C*')
 	end
 
-	prefix = "\0" * (16 - pos)
+	prefix = "\0" * ($BLOCKSIZE - pos)
 
 	0.upto(255) do |i|
-		# C' (payload).
-		evil = prefix + i.chr + flip
+		evil = prefix + i.chr + flip    # C' (payload).
 
 		ciphertext    = evil + blocks[-1]    # C' || C2: payload prepended before the final block to flip the bytes upon CBC decryption.
 		valid_padding = padding_oracle(ciphertext, iv)
@@ -103,18 +104,16 @@ def get_previous_byte(enc, iv, dec, cpp)
 			# The pos'th last byte of the current plaintext block (P2).
 			plaintext = pos ^ ciphertext ^ evil    # P2 = P'2 ^ C1 ^ C' (as per commutativity)
 
-			return plaintext.chr + dec, evil.chr + cpp
+			# Return P2.
+			return plaintext.chr + dec
 		end
 	end
 end
 
 def get_last_block(enc, iv)    # TODO: fix.
 	dec = ''
-	cpp = ''
 
-	16.times do |i|
-		dec, cpp = get_previous_byte(enc, iv, dec, cpp)
-	end
+	$BLOCKSIZE.times { |i| dec = get_previous_byte(enc, iv, dec) }
 
 	dec
 end
@@ -126,8 +125,8 @@ end
 #
 #	enc = iv + enc    # TODO
 #
-#	(enc.size / 16 - 1).times do |i|    # TODO
-#		st = (i == 0) ? enc : enc[0...-i * 16]
+#	(enc.size / $BLOCKSIZE - 1).times do |i|    # TODO
+#		st = (i == 0) ? enc : enc[0...-i * $BLOCKSIZE]
 #		p ['block # = ', i]
 #		knownP = get_last_block(enc, iv) + knownP
 #	end
@@ -138,20 +137,16 @@ end
 def decipher(enc, iv)
 	arr = all_ciphertext
 
-	knownP = ''
-
 	arr.each_with_index do |(enc, iv), i|
 		enc = iv + enc
+		dec = ''
 
-		((enc.size / 16) - 1).times do |i|
-			st     = (i == 0) ? enc : enc[0...-i * 16]
-			knownP = get_last_block(st, iv) + knownP
+		((enc.size / $BLOCKSIZE) - 1).times do |i|
+			block = (i == 0) ? enc : enc[0...-i * $BLOCKSIZE]    # Next $BLOCKSIZE bytes to decipher (starting from the end).
+			dec   = get_last_block(block, iv) + dec
 		end
 
-		puts MatasanoLib::PKCS7.strip(knownP) if knownP
-
-		knownP = ''
-		enc = ''
+		puts MatasanoLib::PKCS7.strip(dec) if dec
 	end
 
 	#MatasanoLib::PKCS7.strip(knownP)
