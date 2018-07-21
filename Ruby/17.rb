@@ -1,5 +1,8 @@
 # Challenge 17: CBC padding oracle attack.
 
+# Solved via dynamic programming: "simplifying a complicated problem by breaking it down into simpler sub-problems in a recursive manner."
+# Bottom-up.
+
 require_relative 'matasano_lib/monkey_patch'
 require_relative 'matasano_lib/aes_128'
 require_relative 'matasano_lib/pkcs7'
@@ -24,8 +27,37 @@ def random_ciphertext
 	iv  = 'YELLOW SUBMARINE'
 	enc = MatasanoLib::AES_128.encrypt(str, $AES_KEY, :CBC, iv: iv)
 
+	#p ['str = ', str]
+
 	# Provide the caller the ciphertext and IV.
 	[enc, iv]
+end
+
+def all_ciphertext
+	rand_strings = [
+					'MDAwMDAwTm93IHRoYXQgdGhlIHBhcnR5IGlzIGp1bXBpbmc=',
+					'MDAwMDAxV2l0aCB0aGUgYmFzcyBraWNrZWQgaW4gYW5kIHRoZSBWZWdhJ3MgYXJlIHB1bXBpbic=',
+					'MDAwMDAyUXVpY2sgdG8gdGhlIHBvaW50LCB0byB0aGUgcG9pbnQsIG5vIGZha2luZw==',
+					'MDAwMDAzQ29va2luZyBNQydzIGxpa2UgYSBwb3VuZCBvZiBiYWNvbg==',
+					'MDAwMDA0QnVybmluZyAnZW0sIGlmIHlvdSBhaW4ndCBxdWljayBhbmQgbmltYmxl',
+					'MDAwMDA1SSBnbyBjcmF6eSB3aGVuIEkgaGVhciBhIGN5bWJhbA==',
+					'MDAwMDA2QW5kIGEgaGlnaCBoYXQgd2l0aCBhIHNvdXBlZCB1cCB0ZW1wbw==',
+					'MDAwMDA3SSdtIG9uIGEgcm9sbCwgaXQncyB0aW1lIHRvIGdvIHNvbG8=',
+					'MDAwMDA4b2xsaW4nIGluIG15IGZpdmUgcG9pbnQgb2g=',
+					'MDAwMDA5aXRoIG15IHJhZy10b3AgZG93biBzbyBteSBoYWlyIGNhbiBibG93'
+                   ]
+
+	arr = []
+
+	rand_strings.each do |str|
+		str = str.decode64
+		iv  = 'YELLOW SUBMARINE'
+		enc = MatasanoLib::AES_128.encrypt(str, $AES_KEY, :CBC, iv: iv)
+
+		arr.push([enc, iv])
+	end
+
+	arr
 end
 
 def padding_oracle(ciphertext, iv)
@@ -33,90 +65,97 @@ def padding_oracle(ciphertext, iv)
 	MatasanoLib::PKCS7.valid(plaintext)
 end
 
-def get_previous_byte(iv, enc, dec, cpp)
-#	pos    = knownI.size + 1
-#	prefix = "\0" * (16 - pos)
-#
-#	1.upto(255) do |i|
-#		c1  = enc.size > 16 ? enc[-32...-16] : iv
-#		c1p = prefix + i.chr + knownI.bytes.map { |i| (i ^ pos).chr }.join
-#		sp  = enc[0...-32] + c1p + enc[-16..-1]
-#
-#		if padding_oracle(sp, iv)
-#			iPrev = i ^ pos
-#			pPrev = c1[-pos].ord ^ iPrev
-#
-#			return iPrev.chr + knownI, pPrev.chr + knownP
-#		end
-#	end
+# P'2 = D(C2) ^ C'
+# C2  = E(P2 ^ C1)
+# P'2 = D(E(P2 ^ C1)) ^ C'
+# P'2 = P2 ^ C1 ^ C'  (as D(E(x)) = x)
+# P2  = P'2 ^ C1 ^ C' (as per commutativity)
+# C'  = P'2 ^ P2 ^ C1 (as per commutativity)
+def get_previous_byte(enc, iv, dec, cpp)
+	blocks = enc.chunk(16)
+	pos    = dec.size + 1    # Position of next byte that will be flipped by x for all x in [0, 255]) to a padding byte.
 
-	byte = 0
+	flip = ''
 
-	# P'2 = D(C2) ^ C'
-	# C2  = E(P2 ^ C1)
-	# P'2 = D(E(P2 ^ C1)) ^ C'
-	# P'2 = P2 ^ C1 ^ C' (as D(E(x)) = x)
-	# P2  = P'2 ^ C1 ^ C' (as per commutativity)
-	# C'  = P'2 ^ P2 ^ C1 (as per commutativity)
-	1.upto(255) do |i|
-		blocks = enc.chunk(16)
-		pos    = dec.size + 1
+	if dec.size > 0
+		c1 = blocks[-2][-dec.size..-1]
 
-		#evil = "\0" * (blocksize - dec.size - 1) << i.chr << "\0" * dec.size
-		prefix = "\0" * (16 - pos)
-		evil   = prefix + i.chr + cpp
-
-		#evil   = prefix + i.chr + MatasanoLib::XOR.crypt(dec, pos.chr).unhex
-
-		ciphertext    = evil + blocks[-1]    # 'evil' a block before the final block, to tamper with the padding.
-		valid_padding = padding_oracle(ciphertext, iv)    #
-
-		if valid_padding
-			byte = pos ^ blocks[-2][-pos].ord ^ evil[-pos].ord    # P2 = P'2 ^ C1 ^ C' (as per commutativity)
-
-			return byte.chr + dec, evil[-pos] + cpp
-		end
-
-		#byte = evil
+		flip = dec.bytes.zip(c1.bytes)
+		          .map { |p2, c1| [pos, p2, c1].inject(&:^) }    # C' = P'2 ^ P2 ^ C1 (as per commutativity)
+		          .pack('C*')
 	end
 
-	#p byte
+	prefix = "\0" * (16 - pos)
+
+	0.upto(255) do |i|
+		# C' (payload).
+		evil = prefix + i.chr + flip
+
+		ciphertext    = evil + blocks[-1]    # C' || C2: payload prepended before the final block to flip the bytes upon CBC decryption.
+		valid_padding = padding_oracle(ciphertext, iv)
+
+		if valid_padding
+			# The pos'th last bytes of the second-last ciphertext block and payload ciphertext (C1 and C').
+			# NOTE: We take C1 because C2 is padding.
+			ciphertext = blocks[-2][-pos].ord
+			evil       = evil[-pos].ord
+
+			# The pos'th last byte of the current plaintext block (P2).
+			plaintext = pos ^ ciphertext ^ evil    # P2 = P'2 ^ C1 ^ C' (as per commutativity)
+
+			return plaintext.chr + dec, evil.chr + cpp
+		end
+	end
 end
 
-def get_last_block(iv, enc)
-	enc, iv = random_ciphertext
-
+def get_last_block(enc, iv)    # TODO: fix.
 	dec = ''
 	cpp = ''
 
-	2.times do |i|
-		dec, cpp = get_previous_byte(iv, enc, dec, cpp)
+	16.times do |i|
+		dec, cpp = get_previous_byte(enc, iv, dec, cpp)
 	end
 
 	dec
 end
 
-p get_last_block(*random_ciphertext)
-
-#def get_last_block(iv, enc)
-#	knownI = ''
+#def decipher(enc, iv)    # TODO: fix.
+#	enc, iv = random_ciphertext
+#
 #	knownP = ''
 #
-#	(0...16).each do
-#		knownI, knownP = get_previous_byte(iv, enc, knownI, knownP)
-#	end
+#	enc = iv + enc    # TODO
 #
-#	knownP
-#end
-#
-#def decipher(iv, enc)
-#	knownP = ''
-#
-#	(enc.size / 16).times do |i|
+#	(enc.size / 16 - 1).times do |i|    # TODO
 #		st = (i == 0) ? enc : enc[0...-i * 16]
-#		knownP = get_last_block(iv, enc) + knownP
+#		p ['block # = ', i]
+#		knownP = get_last_block(enc, iv) + knownP
 #	end
 #
 #	MatasanoLib::PKCS7.strip(knownP)
 #end
 
+def decipher(enc, iv)
+	arr = all_ciphertext
+
+	knownP = ''
+
+	arr.each_with_index do |(enc, iv), i|
+		enc = iv + enc
+
+		((enc.size / 16) - 1).times do |i|
+			st     = (i == 0) ? enc : enc[0...-i * 16]
+			knownP = get_last_block(st, iv) + knownP
+		end
+
+		puts MatasanoLib::PKCS7.strip(knownP) if knownP
+
+		knownP = ''
+		enc = ''
+	end
+
+	#MatasanoLib::PKCS7.strip(knownP)
+end
+
+
+decipher(*random_ciphertext)    # TODO: fix.
