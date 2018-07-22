@@ -12,7 +12,7 @@ module MatasanoLib
 					         when :ECB then AES_128_ECB.encrypt(plaintext, key, opts)
 					         when :CBC then AES_128_CBC.encrypt(plaintext, key, opts)
 					         when :CRT then AES_128_CRT.crypt(plaintext, key, opts)
-					     end
+					         end
 
 				ciphertext
 			end
@@ -22,7 +22,7 @@ module MatasanoLib
 					        when :ECB then AES_128_ECB.decrypt(ciphertext, key, opts)
 					        when :CBC then AES_128_CBC.decrypt(ciphertext, key, opts)
 					        when :CRT then AES_128_CRT.crypt(ciphertext, key, opts)
-					    end
+					        end
 
 				plaintext
 			end
