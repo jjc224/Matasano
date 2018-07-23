@@ -142,8 +142,8 @@ def decrypt_last_byte(enc, iv, known_p2, known_evil_c1)
 	end
 end
 
-# Return the last decrypted block (P2) and the (TODO) second-to-last (TODO) block of ciphertext (C1).
-# Prepends the decrypted P2 and C1 blocks into 'known_p2' and 'known_evil_c1', respectively.
+# Return the last decrypted block (P2).
+# Prepends the discovered P2 and C' bytes into the byte arrays 'known_p2' and 'known_evil_c1', respectively.
 def decrypt_last_block(enc, iv)    # TODO: fix.
 	known_p2      = [] * BLOCKSIZE
 	known_evil_c1 = [] * BLOCKSIZE
