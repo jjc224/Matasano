@@ -77,18 +77,18 @@ def random_ciphertext
                      'MDAwMDA5aXRoIG15IHJhZy10b3AgZG93biBzbyBteSBoYWlyIGNhbiBibG93'
                    ]
 
-	str = rand_strings.sample.decode64
-	iv  = 'YELLOW SUBMARINE'
-	enc = MatasanoLib::AES_128.encrypt(str, AES_KEY, :CBC, iv: iv)
+    str = rand_strings.sample.decode64
+    iv  = 'YELLOW SUBMARINE'
+    enc = MatasanoLib::AES_128.encrypt(str, AES_KEY, :CBC, iv: iv)
 
-	# Provide the caller the ciphertext and IV.
-	[enc, iv]
+    # Provide the caller the ciphertext and IV.
+    [enc, iv]
 end
 
 # The second function should consume the ciphertext produced by the first function, decrypt it, check its padding, and return true or false depending on whether the padding is valid.
 def padding_oracle(ciphertext, iv)
-	plaintext = MatasanoLib::AES_128.decrypt(ciphertext, AES_KEY, :CBC, iv: iv)
-	MatasanoLib::PKCS7.valid(plaintext)
+    plaintext = MatasanoLib::AES_128.decrypt(ciphertext, AES_KEY, :CBC, iv: iv)
+    MatasanoLib::PKCS7.valid(plaintext)
 end
 
 
@@ -97,9 +97,9 @@ end
 # Return the last byte of last block of plaintext (P2) and the last byte of the first block of ciphertext (C1).
 # Prepends the decrypted P2 and C1 bytes into 'known_p2' and 'known_evil_c1', respectively.
 def decrypt_last_byte(enc, iv, known_p2, known_evil_c1)
-	# Padding table. This seems like a more generic choice. Regardless of the values, we can index the correct pad byte using 'pos'.
-	# Since this is PKCS#7 padding, we would simply do 'pads = *(0x01..0x10)'. However this recursive solution allows for any padding scheme.
-	# Moreover, we really could make just use 'pos' for most calculations. Howver, there are benefits to this generalization.
+    # Padding table. This seems like a more generic choice. Regardless of the values, we can index the correct pad byte using 'pos'.
+    # Since this is PKCS#7 padding, we would simply do 'pads = *(0x01..0x10)'. However this recursive solution allows for any padding scheme.
+    # Moreover, we really could make just use 'pos' for most calculations. Howver, there are benefits to this generalization.
     pads = [
              0x01, 0x02, 0x03, 0x04,
              0x05, 0x06, 0x07, 0x08,
@@ -107,64 +107,64 @@ def decrypt_last_byte(enc, iv, known_p2, known_evil_c1)
              0x0D, 0x0E, 0x0F, 0x10
            ]
 
-	bytes_found = known_p2.size             # The amount of bytes discovered are the amount of bytes in the solution (P2) thus far (|P2| = |C'|).
-	pos         = known_evil_c1.size + 1    # Position of next bytes of C1 and C' blocks.
+    bytes_found = known_p2.size             # The amount of bytes discovered are the amount of bytes in the solution (P2) thus far (|P2| = |C'|).
+    pos         = known_evil_c1.size + 1    # Position of next bytes of C1 and C' blocks.
 
-	blocks = enc.chunk(BLOCKSIZE)
-	c1     = blocks[-2].bytes
+    blocks = enc.chunk(BLOCKSIZE)
+    c1     = blocks[-2].bytes
 
-	pad_byte = pads[pos - 1]    # The padding byte we want happens at position pos on a block boundary.
+    pad_byte = pads[pos - 1]    # The padding byte we want happens at position pos on a block boundary.
 
-	known_evil_p2 = [pad_byte] * bytes_found      # An array of the known bytes in P'2 (an array of the known padding bytes in P2).
-	known_c1      = c1[-bytes_found..-1]          # An array of the known bytes in P1.
+    known_evil_p2 = [pad_byte] * bytes_found      # An array of the known bytes in P'2 (an array of the known padding bytes in P2).
+    known_c1      = c1[-bytes_found..-1]          # An array of the known bytes in P1.
 
-	prefix        = [0] * (BLOCKSIZE - pos)
-	known_evil_c1 = known_evil_p2.zip(known_p2, known_c1).map { |pp2, p2, c1| pp2 ^ p2 ^ c1 }    # C' = P'2 ^ P2 ^ C1
+    prefix        = [0] * (BLOCKSIZE - pos)
+    known_evil_c1 = known_evil_p2.zip(known_p2, known_c1).map { |pp2, p2, c1| pp2 ^ p2 ^ c1 }    # C' = P'2 ^ P2 ^ C1
 
-	0.upto(255) do |i|
-		evil_c1 = prefix + [i] + known_evil_c1    # C' (payload)
+    0.upto(255) do |i|
+        evil_c1 = prefix + [i] + known_evil_c1    # C' (payload)
 
-		payload = evil_c1.pack('C*') + blocks[-1]    # C' || C2: payload prepended before the final block to flip the bytes upon CBC decryption.
-		valid_padding = padding_oracle(payload, iv)
+        payload = evil_c1.pack('C*') + blocks[-1]    # C' || C2: payload prepended before the final block to flip the bytes upon CBC decryption.
+        valid_padding = padding_oracle(payload, iv)
 
-		# If we have valid padding, then we can assume P'2 with high probability and then determine P2.
-		if valid_padding
-			# The pos'th last byte of C1 and C' (the pad byte P'2 was decided earlier).
-			c1_byte      = c1[-pos]
-			evil_c1_byte = evil_c1[-pos]
+        # If we have valid padding, then we can assume P'2 with high probability and then determine P2.
+        if valid_padding
+            # The pos'th last byte of C1 and C' (the pad byte P'2 was decided earlier).
+            c1_byte      = c1[-pos]
+            evil_c1_byte = evil_c1[-pos]
 
-			p2 = pad_byte ^ c1_byte ^ evil_c1_byte    # P2 = P'2 ^ C1 ^ C'
+            p2 = pad_byte ^ c1_byte ^ evil_c1_byte    # P2 = P'2 ^ C1 ^ C'
 
-			# Return the last byte of the known_p2 block (P2) and payload ciphertext block (C').
-			# Prepended in reverse due to bottom-up, recursive nature of this algorithm.
-			return [p2] + known_p2, [evil_c1_byte] + known_evil_c1
-		end
-	end
+            # Return the last byte of the known_p2 block (P2) and payload ciphertext block (C').
+            # Prepended in reverse due to bottom-up, recursive nature of this algorithm.
+            return [p2] + known_p2, [evil_c1_byte] + known_evil_c1
+        end
+    end
 end
 
 # Return the last decrypted block (P2).
 # Prepends the discovered P2 and C' bytes into the byte arrays 'known_p2' and 'known_evil_c1', respectively.
 def decrypt_last_block(enc, iv)
-	known_p2      = [] * BLOCKSIZE
-	known_evil_c1 = [] * BLOCKSIZE
+    known_p2      = [] * BLOCKSIZE
+    known_evil_c1 = [] * BLOCKSIZE
 
-	BLOCKSIZE.times { |i| known_p2, known_evil_c1 = decrypt_last_byte(enc, iv, known_p2, known_evil_c1) }
+    BLOCKSIZE.times { |i| known_p2, known_evil_c1 = decrypt_last_byte(enc, iv, known_p2, known_evil_c1) }
 
-	known_p2
+    known_p2
 end
 
 # Returns a given ciphertext vulnerable to the CBC padding oracle attack.
 # Note that this utilizes various subroutines due to the bottom-up, dynamic programming approach taken to solve this problem.
 def padding_oracle_attack(enc, iv)
-	enc = iv + enc    # The ciphertext C. C0 = IV by definition. CBC mode decryption operates such that P[i] = D(C[i]) ^ C[i-1], so the last operation will be P1 = D(C1) ^ IV (hence 'enc = iv + enc').
-	dec = []          # The plaintext P, the decrypted C via a CBC padding oracle attack.
+    enc = iv + enc    # The ciphertext C. C0 = IV by definition. CBC mode decryption operates such that P[i] = D(C[i]) ^ C[i-1], so the last operation will be P1 = D(C1) ^ IV (hence 'enc = iv + enc').
+    dec = []          # The plaintext P, the decrypted C via a CBC padding oracle attack.
 
-	((enc.size / BLOCKSIZE) - 1).times do |i|
-		block = (i == 0) ? enc : enc[0...-i * BLOCKSIZE]    # Essentially will slice off the next ciphertext block after decryption.
-		dec   = decrypt_last_block(block, iv) + dec
-	end
+    ((enc.size / BLOCKSIZE) - 1).times do |i|
+        block = (i == 0) ? enc : enc[0...-i * BLOCKSIZE]    # Essentially will slice off the next ciphertext block after decryption.
+        dec   = decrypt_last_block(block, iv) + dec
+    end
 
-	puts MatasanoLib::PKCS7.strip(dec.pack('C*')) if dec
+    puts MatasanoLib::PKCS7.strip(dec.pack('C*')) if dec
 end
 
 # Execute padding_oracle_attack(C, IV) such that the ciphertext C is an (AES-128-CBC) encrypted random string S with PKCS#7 padding (this can be trivially changed).
