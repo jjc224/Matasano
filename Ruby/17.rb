@@ -169,3 +169,17 @@ end
 
 # Execute padding_oracle_attack(C, IV) such that the ciphertext C is an (AES-128-CBC) encrypted random string S with PKCS#7 padding (this can be trivially changed).
 padding_oracle_attack(*random_ciphertext)
+
+# [phizo@jizzo:~/Projects/Matasano/Ruby on master] time (for i in {1..10}; do ruby 17.rb; done)
+# -------------------------------------------------------
+# 000008ollin' in my five point oh
+# 000006And a high hat with a souped up tempo
+# 000007I'm on a roll, it's time to go solo
+# 000005I go crazy when I hear a cymbal
+# 000008ollin' in my five point oh
+# 000009ith my rag-top down so my hair can blow
+# 000001With the bass kicked in and the Vega's are pumpin'
+# 000006And a high hat with a souped up tempo
+# 000009ith my rag-top down so my hair can blow
+# 000004Burning 'em, if you ain't quick and nimble
+# ( for i in {1..10}; do; ruby 17.rb; done; )  5.23s user 0.05s system 99% cpu 5.289 total
