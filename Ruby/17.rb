@@ -17,6 +17,7 @@
 # Note that C0 = IV.
 
 # These equations are under the assumption that encryption/decryption is under CBC mode.
+# (These were derived earlier as per the below text and are placed here for convenience.)
 # --------------------------------------------------------------------------------------
 # P'2 = D(C2) ^ C'
 # C2  = E(P2 ^ C1)
