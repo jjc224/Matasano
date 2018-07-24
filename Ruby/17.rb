@@ -52,6 +52,8 @@
 #     Now that we have a function to decrypt the last byte.
 #     All that needs to be done is implement a function which mounts this byte-decrypting function such that it decrypts a whole block.
 #     Finally, we mount another function such that it will decrypt all blocks in C.
+#
+#     Essentially, it use a bottom-up approach with some recursion and string manipulation to accompany the function which decrypts the last byte.
 
 require_relative 'matasano_lib/monkey_patch'
 require_relative 'matasano_lib/aes_128'
