@@ -133,7 +133,7 @@ def decrypt_last_byte(enc, iv, known_p2, known_evil_c1)
     0.upto(255) do |i|
         evil_c1 = prefix + [i] + known_evil_c1    # C' (payload)
 
-        payload = evil_c1.pack('C*') + blocks[-1]    # C' || C2: payload prepended before the final block to flip the bytes upon CBC decryption.
+        payload       = evil_c1.pack('C*') + blocks[-1]    # C' || C2: payload prepended before the final block to flip the bytes upon CBC decryption.
         valid_padding = padding_oracle(payload, iv)
 
         # If we have valid padding, then we can assume P'2 with high probability and then determine P2.
