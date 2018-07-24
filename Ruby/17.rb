@@ -122,7 +122,7 @@ def decrypt_last_byte(enc, iv, known_p2, known_evil_c1)
     blocks = enc.chunk(BLOCKSIZE)
     c1     = blocks[-2].bytes
 
-    pad_byte = pads[pos - 1]    # The padding byte we want happens at position pos on a block boundary.
+    pad_byte = pads[pos - 1]    # The padding byte we want happens at position 'pos' on a block boundary.
 
     known_evil_p2 = [pad_byte] * bytes_found    # An array of the known bytes in P'2 (an array of the known padding bytes in P2).
     known_c1      = c1[-bytes_found..-1]        # An array of the known bytes in P1.
