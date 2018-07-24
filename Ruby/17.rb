@@ -1,7 +1,12 @@
 # Challenge 17: CBC padding oracle attack.
 
+# I am given {C, IV} such that C is a ciphertext declared at random, encrypted under a random 128-bit key in CBC mode using AES as a block cipher, to break from a set of 10 plaintexts each which cycle at random and map to its ciphertext.
+# Via a side-channel leak in the padding oracle which returns whether or not a decrypted ciphertext (i.e. the plaintext) possess valid padding,
+# I can flip bits in a ciphertext on a block boundary and validate whether I have hit the correct padding byte(s) (up to 128 bits long) to recursively decrypt each last to a decrypt a block, then apply the same approach to decrypt all blocks.
+#
 # Solution broken down via bottom-up, dynamic programming: "simplifying a complicated problem by breaking it down into simpler sub-problems in a recursive manner."
 # Explanation below.
+
 
 # IV  = Initialization vector.
 # P   = Plaintext.
