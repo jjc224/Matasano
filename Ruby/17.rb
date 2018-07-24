@@ -40,7 +40,7 @@
 # Now that we know how to mathematically derive the blocks, we can begin targetting particular bytes.
 # Firstly, we want to flip the last byte in C' such that C'[-1] = P'2[-1] (0x01 in PKCS#7).
 # This will give us the values necessary to determine P2 = P'2 ^ C1 ^ C'.
-# Once we know the next bytes in P2 and C'.
+# We can therefore assume P2 = 0x01 in the initial case.
 #
 # Breaking this is just a matter of running this recursively by taking a bottom-up dynamic programming approach to:
 #     1. Take the next last byte in the given block (C2).
