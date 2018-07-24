@@ -10,7 +10,7 @@
 # P'  = Garbage plaintext resulted by padding_oracle(C', IV).
 # Pn  = The n'th block of plaintext.
 # Cn  = The n'th block of ciphertext.
-# P'n = The n'th block of ciphertext.
+# P'n = The n'th block of garbage plaintext.
 # E   = Encryption function: AES-128-CBC in this case.
 # D   = Decryption function: AES-128-CBC in this case.
 
