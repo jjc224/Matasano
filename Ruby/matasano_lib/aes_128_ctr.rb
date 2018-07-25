@@ -3,7 +3,7 @@ require_relative 'aes_128'
 require_relative 'xor'
 
 module MatasanoLib
-    module AES_128_CRT
+    module AES_128_CTR
 
         class << self
             def crypt(input, key, opts = {})    # Default format: 64-bit unsigned little-endian [nonce, block counter].

@@ -30,7 +30,7 @@ module MatasanoLib
 				regexpr = Regexp.union(charset.chars)
 				regexpr = Regexp.new(regexpr.source, Regexp::IGNORECASE)
 
-				(1..255).each do |i|
+				(0..255).each do |i|
 					attempt_key = i.chr
 					xor_key     = (attempt_key * (enc.length / 2)).to_hex     # Repeat single-key to match size of ciphertext for XOR'ing.
 					ret_hex     = hex(enc, xor_key)
@@ -46,7 +46,7 @@ module MatasanoLib
 					end
 				end
 
-				raise 'No solution.' if solution_data[:score] == 0
+                #raise 'No solution.' if solution_data[:score] == 0
 				solution_data
 			end
 		end
