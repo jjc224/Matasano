@@ -76,7 +76,7 @@ def blackbox_mt19937
     extract_number    # Already returns a 32-bit int masked by 0xffffffff ((1 << $w) - 1).
 end
 
-# Cracking the seed in the block
+# Cracking the seed used in blackbox_mt19937():
 t1 = Time.now.to_i
 r  = blackbox_mt19937
 t2 = Time.now.to_i
