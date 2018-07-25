@@ -16,7 +16,7 @@ UPPER_MASK = ((1 << $w) - 1) & ~LOWER_MASK
 
 # Initialize the generator with a seed.
 def seed_mt(seed)
-    $index  = $n
+    $index = $n
     $mt[0] = seed
     f      = 1812433253    # The value for f for MT19937 (32-bit).
 
