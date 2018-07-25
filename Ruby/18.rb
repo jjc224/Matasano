@@ -5,6 +5,7 @@ require_relative 'matasano_lib/aes_128'
 require_relative 'matasano_lib/aes_128_common'
 require_relative 'matasano_lib/xor'
 
+# NOTE: nonce and IV are synonymous apparently in this context.
 def aes_128_ctr(input, key, nonce = 0, format = 'QQ<')    # Default format: 64-bit unsigned little-endian [nonce, block counter].
 	blocks      = input.chunk(MatasanoLib::AES_128::BLOCKSIZE)
 	ciphertext  = ''

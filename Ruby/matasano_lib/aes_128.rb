@@ -1,7 +1,7 @@
 require          'securerandom'
 require_relative 'aes_128_ecb'
 require_relative 'aes_128_cbc'
-require_relative 'aes_128_crt'
+require_relative 'aes_128_ctr'
 require_relative 'aes_128_common'
 
 module MatasanoLib
