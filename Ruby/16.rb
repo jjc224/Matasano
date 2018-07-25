@@ -29,7 +29,7 @@ end
 #	1. Completely scrambles the block the error occurs in.
 #	2. produces the identical 1-bit error(/edit) in the next ciphertext block.
 
-blocksize = MatasanoLib::AES_128_CBC.determine_blocksize { |input| encrypt_request(input) }
+blocksize = MatasanoLib::AES_128_COMMON.determine_blocksize { |input| encrypt_request(input) }
 
 evil = 'A' * (blocksize + 5) << '~admin|true'
 enc = encrypt_request(evil)

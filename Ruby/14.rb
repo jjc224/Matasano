@@ -1,11 +1,12 @@
 # Challenge 14: byte-at-a-time AES-128-ECB decryption (harder)
 
-require 'base64'
-require_relative 'matasano_lib/aes_128_ecb'
+require          'base64'
+require          'securerandom'
 require_relative 'matasano_lib/monkey_patch'
+require_relative 'matasano_lib/aes_128'
 
 $ORACLE_PREFIX = SecureRandom.random_bytes(rand(0..64))
-$ORACLE_KEY    = MatasanoLib::AES_128_ECB.random_key
+$ORACLE_KEY    = MatasanoLib::AES_128.random_key
 
 # AES-128-ECB(random-prefix || attacker-controlled || target-bytes, random-key)
 def encryption_oracle(plaintext)
@@ -75,7 +76,7 @@ end
 # 2. Detect that the function is using ECB. You already know, but do this step anyways.
 blocksize   = determine_blocksize
 input       = 'A' * blocksize * 4
-cipher_mode = MatasanoLib::AES_128_ECB.detect_mode(input)
+cipher_mode = MatasanoLib::AES_128_COMMON.detect_mode(input)
 
 # 3. Knowing the block size, craft an input block that is exactly 1 byte short (for instance, if the block size is 8 bytes, make "AAAAAAA"). Think about what the oracle function is going to put in that last byte position.
 # 4. Make a dictionary of every possible last byte by feeding different strings to the oracle; for instance, "AAAAAAAA", "AAAAAAAB", "AAAAAAAC", remembering the first block of each invocation.

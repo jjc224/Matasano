@@ -5,10 +5,8 @@ require_relative 'pkcs7'
 module MatasanoLib
 	module AES_128_ECB
 		class << self
-			include AES_128_COMMON
-
 			def encrypt(plaintext, key = random_key, opts = {})
-				opts   = {padded: true} if opts.empty?
+                opts[:padded] = true if opts[:padded].nil?
 				cipher = OpenSSL::Cipher.new('AES-128-ECB')
 
 				cipher.encrypt
@@ -24,7 +22,7 @@ module MatasanoLib
 			end
 
 			def decrypt(enc, key, opts = {})
-				opts   = {padded: true} if opts.empty?
+                opts[:padded] = true if opts[:padded].nil?
 				cipher = OpenSSL::Cipher.new('AES-128-ECB')
 
 				cipher.decrypt

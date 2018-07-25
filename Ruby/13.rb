@@ -53,7 +53,7 @@ admin_block = '30e3074d6e2e7f5b0fc4c78fe03be512'.unhex
 email       = 'soz@jaz0r.com'     # Previously: 'AAAAAAAAAA' << 'admin' << "\x0b" * 11 + 'AAA'
 enc_email   = encrypt_profile(email, key)
 
-blocksize  = MatasanoLib::AES_128_ECB.determine_blocksize { |input| encrypt_profile(input, key) }
+blocksize  = MatasanoLib::AES_128_COMMON.determine_blocksize { |input| encrypt_profile(input, key) }
 attack     = enc_email[0...-blocksize] << admin_block
 ciphertext = attack.chunk(blocksize).to_hex
 dec_email  = decrypt_profile(attack, key)

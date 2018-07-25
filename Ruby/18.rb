@@ -2,15 +2,15 @@
 
 require_relative 'matasano_lib/monkey_patch'
 require_relative 'matasano_lib/aes_128'
+require_relative 'matasano_lib/aes_128_common'
 require_relative 'matasano_lib/xor'
 
 def aes_128_ctr(input, key, nonce = 0, format = 'QQ<')    # Default format: 64-bit unsigned little-endian [nonce, block counter].
-	blocksize   = 16
-	blocks      = input.chunk(blocksize)
+	blocks      = input.chunk(MatasanoLib::AES_128::BLOCKSIZE)
 	ciphertext  = ''
 	cipher_opts = {mode: :ECB, padded: false}
 
-	for i in 0...blocks.size
+    for i in 0...blocks.size
 		keystream     = [nonce, i].pack(format)
 		enc_keystream = MatasanoLib::AES_128.encrypt(keystream, key, cipher_opts)
 

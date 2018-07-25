@@ -1,39 +1,39 @@
 # Challenge 11: implement an AES-128-ECB/CBC detection oracle.
 
-require 'securerandom'
+require          'securerandom'
 require_relative 'matasano_lib/aes_128_ecb'
 require_relative 'matasano_lib/aes_128_cbc'
 
 def random_aes_key    # Generates a random 128-bit AES key.
-	SecureRandom.random_bytes
+    SecureRandom.random_bytes
 end
 
 def aes_rand_encrypt(plaintext)
-	rand_str  = ->(n) { SecureRandom.random_bytes(rand(n)) }
-	plaintext = rand_str.call(5..10) << plaintext << rand_str.call(5..10)
-	ecb_mode  = rand(2).odd?    # Sure is odd to use ECB mode. ;o
+    rand_str  = ->(n) { SecureRandom.random_bytes(rand(n)) }
+    plaintext = rand_str.call(5..10) << plaintext << rand_str.call(5..10)
+    ecb_mode  = rand(2).odd?    # Sure is odd to use ECB mode. ;o
 
-	if ecb_mode
-		puts "[+] Encrypting under ECB.\n\n"
-		MatasanoLib::AES_128_ECB.encrypt(plaintext, random_aes_key)
-	else
-		puts "[+] Encrypting under CBC.\n\n"
-		MatasanoLib::AES_128_CBC.encrypt(plaintext, random_aes_key, random_aes_key)    # "use random IVs each time for CBC"
-	end
+    if ecb_mode
+        puts "[+] Encrypting under ECB.\n\n"
+        MatasanoLib::AES_128.encrypt(plaintext, random_aes_key, :mode => :ECB)
+    else
+        puts "[+] Encrypting under CBC.\n\n"
+        MatasanoLib::AES_128.encrypt(plaintext, random_aes_key, :mode => :CBC, :iv => random_aes_key)    # "use random IVs each time for CBC"
+    end
 end
 
 def detect_aes_mode(ciphertext)    # Expecting hex formatted ciphertext.
-	blocks      = ciphertext.scan(/.{1,32}/)    # Split into 16-byte blocks; working with hex, so 32 characters.
-	blocks_dups = {}
+    blocks      = ciphertext.scan(/.{1,32}/)    # Split into 16-byte blocks; working with hex, so 32 characters.
+    blocks_dups = {}
 
-	# Iterate through the unique elements.
-	# Store the count of each duplicate element in a hash for output.
-	blocks.uniq.select do |block|
-		count = blocks.count(block)
-		blocks_dups[block] = count if count > 1
-	end
-	
-	blocks_dups.empty? ? 'CBC' : 'ECB'
+    # Iterate through the unique elements.
+    # Store the count of each duplicate element in a hash for output.
+    blocks.uniq.select do |block|
+        count = blocks.count(block)
+        blocks_dups[block] = count if count > 1
+    end
+
+    blocks_dups.empty? ? 'CBC' : 'ECB'
 end
 
 input = "I need the same 16-byte blocks. I need the same 16-byte blocks. I need the same 16-byte blocks."

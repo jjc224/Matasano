@@ -1,15 +1,11 @@
-require 'securerandom'
-
 module MatasanoLib
 	module AES_128_COMMON
+
+        BLOCKSIZE = 16
+
 		class << self
-			@@blocksize = 16    # TODO: use this globally.
-
-			def random_key
-				SecureRandom.random_bytes
-			end
-
-			def detect_mode(ciphertext)    # Expecting hex formatted ciphertext.
+            # Expects a hex-encoded ciphertext.
+			def detect_mode(ciphertext)
 				blocks      = ciphertext.scan(/.{1,32}/)    # Split into 16-byte blocks; working with hex, so 32 characters.
 				blocks_dups = {}
 
@@ -35,5 +31,6 @@ module MatasanoLib
 				yield(input).length - curr_size
 			end
 		end
+
 	end
 end
