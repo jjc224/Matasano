@@ -10,7 +10,7 @@
 #   The mathematics are all defined in the block cipher mode.
 #   It's all a matter of understanding how XOR operations in CTR take place for encryption/decryption and using it to your advantage.
 
-# TODO: if I have the time, write the solution more nicely (and touch up MT1993 stuff).
+# TODO: if I have the time, write the solution more nicely (and touch up MT19937 code and place into its own module).
 
 require_relative 'matasano_lib/monkey_patch'
 require_relative 'matasano_lib/aes_128'
@@ -45,15 +45,10 @@ evil    = 'A' * (BLOCKSIZE + 5) << to_flip
 enc     = encrypt_request(evil)
 cp_idx  = 32 + BLOCKSIZE + 5    # 32 bytes to ignore the first key-value, the next an offset to '~admin|true'. These values work on a block boundary, XOR'd against C and/or K.
 
-def flip_bytes(enc, p, pp, cp_idx)
-    c = p.ord ^ pp.ord ^ enc[cp_idx].ord    # c = p ^ pp ^ cp
-end
+flip_bytes = ->(p, pp, cp) { (p.ord ^ pp.ord ^ cp.ord).chr }    # C = P ^ P' ^ C'
 
-enc[cp_idx]     = flip_bytes(enc, ';', '~', cp_idx).chr
-enc[cp_idx + 6] = flip_bytes(enc, '=', '|', cp_idx + 6).chr
-
-enc[cp_idx]     = flip_bytes(enc, ';', '~', cp_idx).chr
-enc[cp_idx + 6] = flip_bytes(enc, '=', '|', cp_idx + 6).chr
+enc[cp_idx]     = flip_bytes.call(';', '~', enc[cp_idx])
+enc[cp_idx + 6] = flip_bytes.call('=', '|', enc[cp_idx + 6])
 
 puts is_admin?(enc) ? '[+] Welcome, admin!' : "[-] User just ain't good enough."
 
