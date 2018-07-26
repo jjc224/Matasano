@@ -5,7 +5,7 @@
 # I first made sure to realize that while CTR is a stream cipher mode, it does so by using block cipher mode with a keystream to neglect the need for padding.
 # This allowed me to conjure up the same sort of method of breaking this:
 #   1. Break into 128-bit blocks.
-#   2. Flip the bytes in the right blocks (and block boundary)
+#   2. Flip the bytes in the right blocks (on a parallel, block boundary).
 #
 #   The mathematics are all defined in the block cipher mode.
 #   It's all a matter of understanding how XOR operations in CTR take place for encryption/decryption and using it to your advantage.
