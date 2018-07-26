@@ -32,7 +32,7 @@ def is_admin?(input)
 	data_pair['admin']
 end
 
-# 1. Flip the byte on the same C/K/P blocks. Don't XOR the block before like in CBC.
+# Flip the bytes at the same position on C/P/K blocks, so they're XOR'd together on a block boundary to produce the correct values.
 #
 # You need to take the known evil plain and evil bytes C' and P' (which you do know; you facilitated in their creation).
 # You can calculate the key-stream byte K = P' ^ C'. Then you know C = P ^ K (e.g. ';' ^ K in first instance).
