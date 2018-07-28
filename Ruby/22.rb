@@ -27,7 +27,7 @@ def seed_mt(seed)
 end
 
 # Extract a tempered value based on MT[index] calling twist() every n numbers.
-def extract_number
+def rand_mt
     if $index >= $n
         raise "Generator was never seeded." if $index > $n    # Alternatively, seed with constant value; 5489 is used in reference C code.
         twist()
@@ -55,7 +55,6 @@ def twist
     $index = 0    # Not meant as return.
 end
 
-
 # Write a routine that performs the following operation:
 #
 #   1. Wait a random number of seconds between, I don't know, 40 and 1000.
@@ -73,30 +72,23 @@ def blackbox_mt19937
     seed_mt(Time.now.to_i)
     sleep(rand(40..1_000))
 
-    extract_number    # Already returns a 32-bit int masked by 0xffffffff ((1 << $w) - 1).
+    rand_mt    # Already returns a 32-bit int masked by 0xffffffff ((1 << $w) - 1).
 end
 
-# Cracking the seed used in blackbox_mt19937():
-t1 = Time.now.to_i
-r  = blackbox_mt19937
-t2 = Time.now.to_i
+def crack_blackbox_mt19937
+    # As we are seeding with the current time padded between two intervals of time, it is simply a matter of brute-forcing the seed between that interval (when it's short like in this case).
+    # We know that the seed is in the interval [t1, t2]. t2 - t1 also gives us an estimation of how long the function ran for.
+    t1 = Time.now.to_i
+    r  = blackbox_mt19937
+    t2 = Time.now.to_i
 
-# As we are seeding with the current time padded between two intervals of time, it is simply a matter of brute-forcing the seed between that interval (when it's short like in this case).
-# We know that the seed is in the interval [t1, t2]. t2 - t1 also gives us an estimation of how long the function ran for.
+    interval = (t1..t2).to_a   # It doesn't hurt to check for t1 and t2. May as well make it an inclusive interval.
+    index    = interval.index { |seed| seed_mt(seed); r == rand_mt }
 
-# It doesn't hurt to check for t1 and t2. May as well make it an inclusive interval.
-t = t1
-while t <= t2
-    seed_mt(t)
-    attempt_r = extract_number
-
-    if attempt_r == r
-        puts "Seed: #{attempt_r}"
-        break
-    end
-
-    t += 1
+    interval[index]
 end
+
+puts "Seed: #{crack_blackbox_mt19937.to_s}"
 
 # Output:
 #------------------------------------ ----------------------------
