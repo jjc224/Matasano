@@ -122,7 +122,7 @@ def decrypt_last_byte(enc, iv, known_p2, known_evil_c1)
   bytes_found = known_p2.size           # The amount of bytes discovered are the amount of bytes in the solution (P2) thus far (|P2| = |C'|).
   pos         = known_evil_c1.size + 1  # Position of next bytes of C1 and C' blocks.
 
-  pad_byte = pads[pos - 1]  # P'2 (the byte we want is conveniently at position 'pos' on a block boundary, so we can index the table nicely).
+  pad_byte = pads[pos - 1]  # P'2 (the byte we want is conveniently at position '-pos' on a block boundary, so we can index the table nicely).
 
   blocks        = enc
   c1            = blocks[-2].bytes
