@@ -122,16 +122,15 @@ def decrypt_last_byte(enc, iv, known_p2, known_evil_c1)
   bytes_found = known_p2.size           # The amount of bytes discovered are the amount of bytes in the solution (P2) thus far (|P2| = |C'|).
   pos         = known_evil_c1.size + 1  # Position of next bytes of C1 and C' blocks.
 
-  blocks = enc.chunk(BLOCKSIZE)
-  c1     = blocks[-2].bytes
-
   pad_byte = pads[pos - 1]  # P'2 (the byte we want is conveniently at position 'pos' on a block boundary, so we can index the table nicely).
 
+  blocks        = enc
+  c1            = blocks[-2].bytes
   known_evil_p2 = [pad_byte] * bytes_found  # An array of the known bytes in P'2 (an array of the known padding bytes in P2).
   known_c1      = c1[-bytes_found..-1]      # An array of the known bytes in C1.
 
   prefix        = [0] * (BLOCKSIZE - pos)
-  known_evil_c1 = known_evil_p2.zip(known_p2, known_c1).map { |pp2, p2, c1| pp2 ^ p2 ^ c1 }  # C' = P'2 ^ P2 ^ C1
+  known_evil_c1 = known_evil_p2.zip(known_p2, known_c1).map { |known| known.reduce(:^) }  # C' = P'2 ^ P2 ^ C1
 
   0.upto(255) do |i|
     evil_c1 = prefix + [i] + known_evil_c1  # C' (payload)
@@ -155,8 +154,6 @@ def decrypt_last_byte(enc, iv, known_p2, known_evil_c1)
   end
 end
 
-# Return the last decrypted block (P2).
-# Prepends the discovered P2 and C' bytes into the byte arrays 'known_p2' and 'known_evil_c1', respectively.
 def decrypt_last_block(enc, iv)
   known_p2      = [] * BLOCKSIZE
   known_evil_c1 = [] * BLOCKSIZE
@@ -166,19 +163,15 @@ def decrypt_last_block(enc, iv)
   known_p2
 end
 
-# Returns a given ciphertext vulnerable to the CBC padding oracle attack.
-# Note that this utilizes various subroutines due to the bottom-up, dynamic programming approach taken to solve this problem.
 def padding_oracle_attack(enc, iv)
-  enc = iv + enc  # The ciphertext C. C0 = IV by definition. CBC mode decryption operates such that P[i] = D(C[i]) ^ C[i-1], so the last operation will be P1 = D(C1) ^ IV (hence 'enc = iv + enc').
-  dec = []        # The plaintext P, the decrypted C via a CBC padding oracle attack.
+  enc = [iv] + enc.chunk(BLOCKSIZE)  # The ciphertext C. C0 = IV by definition. CBC mode decryption operates such that P[i] = D(C[i]) ^ C[i-1], so the last operation will be P1 = D(C1) ^ IV (hence 'enc = iv + enc').
+  dec = []                           # The plaintext P, the decrypted C via a CBC padding oracle attack.
 
-  ((enc.size / BLOCKSIZE) - 1).times do |i|
-    block = (i == 0) ? enc : enc[0...-i * BLOCKSIZE]  # Essentially will slice off the next ciphertext block after decryption.
-    dec   = decrypt_last_block(block, iv) + dec
-  end
+  (enc.size - 1).times { |i| dec = decrypt_last_block(enc[0..-(i + 1)], iv) + dec }
 
   MatasanoLib::PKCS7.strip(dec.pack('C*')) if dec
 end
+
 
 # Execute padding_oracle_attack(C, IV) such that the ciphertext C is an (AES-128-CBC) encrypted random string S with PKCS#7 padding (this can be trivially changed).
 puts padding_oracle_attack(*random_ciphertext)
