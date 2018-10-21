@@ -1,9 +1,9 @@
 # Challenge 17: CBC padding oracle attack.
 
 # I am given {C, IV} such that C is a ciphertext declared at random, encrypted under a random 128-bit key in CBC mode using AES as a block cipher, to break from a set of 10 plaintexts each which cycle at random per invokation and map to its ciphertext.
-# The initialization vector (IV) is also unknown. However, given {C, IV} used in a CBC-decrypting padding oracle which validates the plaintext P's padding to the end user causes a vulnerability to arise.
-# There exists a side-channel leak in the padding oracle which returns whether or not a decrypted ciphertext (i.e. the plaintext) possesses valid padding,
-# I can flip bits in a ciphertext on a block boundary and validate whether I have hit the correct padding byte(s) (up to 128 bits long) to recursively decrypt each last to a decrypt a block, then apply the same approach to decrypt all blocks.
+# The initialization vector (IV) is also unknown. However, given {C, IV} used in a CBC-decrypting padding oracle which validates the plaintext P's padding to the end-user allows for a side-channel attack by which P can be recovered.
+# I.e., there exists an info leak in the padding oracle which returns whether or not a decrypted ciphertext (i.e., the plaintext P) possesses valid padding. TODO: delete?
+# I can flip bits in a ciphertext on a block boundary and validate whether I have hit the correct padding byte(s) (up to 128 bits long) to iteratively decrypt a block, then apply the same approach to decrypt all blocks.
 #
 # Solution broken down via bottom-up, dynamic programming: "simplifying a complicated problem by breaking it down into simpler sub-problems in a recursive manner."
 # Explanation below.
@@ -49,7 +49,7 @@
 # This will give us the values necessary to determine P2 = P'2 ^ C1 ^ C'.
 # We can therefore assume P2 = 0x01 in the initial case.
 #
-# Breaking this is just a matter of running this recursively by taking a bottom-up dynamic programming approach to:
+# Breaking this is just a matter of running this procedurally by taking a bottom-up dynamic programming approach to:
 #     1. Take the next last byte in the given block (C2).
 #     2. Manufacture a payload ciphertext C' such that it will use x for all x in [0, 255] on a block boundary position n.
 #     3. The payload becomes C' || C2 so that the last byte in C2 is flipped by C' to assume the value of P'2[i] from C'[i]: P'2[i] = D(C2[i]) ^ C'[i].
@@ -110,7 +110,7 @@ end
 def decrypt_last_byte(enc, iv, known_p2, known_evil_c1)
   # Padding table.
   # This seems like a more generic choice. Regardless of the values, we can index the correct pad byte using 'pos'.
-  # Since this is PKCS#7 padding, we would simply do 'pads = *(0x01..0x10)'. However this recursive solution allows for any padding scheme with minor modifications.
+  # Since this is PKCS#7 padding, we would simply do 'pads = *(0x01..0x10)'. However this solution allows for any padding scheme with minor modifications.
   # Moreover, we really could just use 'pos' for most calculations. Howver, there are benefits to this generalization.
   pads = [
            0x01, 0x02, 0x03, 0x04,
@@ -148,15 +148,15 @@ def decrypt_last_byte(enc, iv, known_p2, known_evil_c1)
       p2 = pad_byte ^ c1_byte ^ evil_c1_byte  # P2 = P'2 ^ C1 ^ C'
 
       # Return the last byte of the known_p2 block (P2) and payload ciphertext block (C').
-      # Prepended in reverse due to bottom-up, recursive nature of this algorithm.
+      # Prepended in reverse due to bottom-up nature of this algorithm.
       return [p2] + known_p2, [evil_c1_byte] + known_evil_c1
     end
   end
 end
 
 def decrypt_last_block(enc, iv)
-  known_p2      = [] * BLOCKSIZE
-  known_evil_c1 = [] * BLOCKSIZE
+  known_p2      = []
+  known_evil_c1 = []
 
   BLOCKSIZE.times { |i| known_p2, known_evil_c1 = decrypt_last_byte(enc, iv, known_p2, known_evil_c1) }
 
