@@ -21,16 +21,16 @@ NONCE     = rand((0..0xffffff))    # [0, 2 ** 32)
 AES_KEY   = 'd41d19c407130e53228994fa192dcaf7'.unhex
 
 def encrypt_request(input)
-	input = "comment1=cooking%20MCs;userdata=" << input.gsub(/([;=])/, '\'\1\'') << ";comment2=%20like%20a%20pound%20of%20bacon"
-	MatasanoLib::AES_128.encrypt(input, AES_KEY, :mode => :CTR)
+    input = "comment1=cooking%20MCs;userdata=" << input.gsub(/([;=])/, '\'\1\'') << ";comment2=%20like%20a%20pound%20of%20bacon"
+    MatasanoLib::AES_128.encrypt(input, AES_KEY, :mode => :CTR)
 end
 
 def is_admin?(input)
-	plaintext = MatasanoLib::AES_128.decrypt(input, AES_KEY, :mode => :CTR, :nonce => NONCE)
-	data_pair = Hash[plaintext.split(';').map { |x| x.split('=') }]
+    plaintext = MatasanoLib::AES_128.decrypt(input, AES_KEY, :mode => :CTR, :nonce => NONCE)
+    data_pair = Hash[plaintext.split(';').map { |x| x.split('=') }]
 
     p data_pair
-	data_pair['admin']
+    data_pair['admin']
 end
 
 # Flip the bytes at the same position on C/P/K blocks, so they're XOR'd together on a block boundary to produce the correct values.
@@ -53,3 +53,8 @@ enc[cp_idx + 6] = flip_bytes.call('=', '|', enc[cp_idx + 6])
 
 puts is_admin?(enc) ? '[+] Welcome, admin!' : "[-] User just ain't good enough."
 
+# Output:
+#------------------------------------------------------------
+# [phizo@jizzo:~/Projects/Matasano/Ruby on master] ruby 26.rb
+# {"comment1"=>"cooking%20MCs", "userdata"=>"AAAAAAAAAAAAAAAAAAAAA", "admin"=>"true", "comment2"=>"%20like%20a%20pound%20of%20bacon"}
+# [+] Welcome, admin!
