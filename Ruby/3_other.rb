@@ -19,7 +19,7 @@ def xor_brute(enc, charset)
 
 	solution_data = {'score' => 0}
 
-	(1..255).each do |c|
+	(0..255).each do |c|
 		attempt_key = c.chr
 		xor_key     = (attempt_key * (enc.length / 2)).unpack('H*')[0]     # Repeat single-key to match size of ciphertext for XOR'ing.
 		ret_hex     = xor_hex(enc, xor_key)
