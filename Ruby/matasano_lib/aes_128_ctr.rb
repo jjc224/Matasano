@@ -23,3 +23,5 @@ module MatasanoLib
         end
     end
 end
+
+# C_K = AES-128-ECB(K, $AES_KEY, :padded => false)

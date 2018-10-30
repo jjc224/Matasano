@@ -57,7 +57,7 @@ key = String.new
 
 # Step 7 and 8.
 transposed_blocks.each_with_index do |block, i|
-	key << MatasanoLib::XOR.brute(block.to_hex, 'ETAOIN SHRDLU')[:key]
+	key << MatasanoLib::XOR.brute(block, 'ETAOIN SHRDLU')[:key]
 end
 
 puts "Key: '" << key << "'\n\n"

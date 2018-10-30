@@ -66,7 +66,7 @@ def decrypt_next_byte(ciphertexts, k)
         column << c[k].to_s
     end
 
-    solution = MatasanoLib::XOR.brute(column.to_hex, "ETAOIN SHRDLU.,?;:")
+    solution = MatasanoLib::XOR.brute(column, "ETAOIN SHRDLU.,?;:")
     solution[:key]
 end
 

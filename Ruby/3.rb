@@ -12,7 +12,7 @@ def xor_brute(enc, charset)
 	regexpr = Regexp.union(charset.chars)
 	regexpr = Regexp.new(regexpr.source, Regexp::IGNORECASE)
 
-	(1..255).each do |i|
+	(0..255).each do |i|
 		attempt_key = i.chr
 		xor_key     = (attempt_key * (enc.length / 2)).to_hex     # Repeat single-key to match size of ciphertext for XOR'ing.
 		ret_hex     = MatasanoLib::XOR.hex(enc, xor_key)
