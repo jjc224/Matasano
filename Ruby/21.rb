@@ -60,5 +60,5 @@ p [extract_number, extract_number, extract_number]
 
 # Output:
 # -----------------------------------------------------------
-# [phizo@jizzo:~/Projects/Matasano/Ruby on master] ruby 21.rb
+# [jjc224@jizzo:~/Projects/Matasano/Ruby on master] ruby 21.rb
 # [2614645925, 2804711513, 720410643]

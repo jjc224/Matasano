@@ -92,7 +92,7 @@ puts "Seed: #{crack_blackbox_mt19937.to_s}"  # This would output 'Seed: nil' on 
 
 # Output:
 #------------------------------------ ----------------------------
-# [phizo@jizzo:~/Projects/Matasano/Ruby on master] time ruby 22.rb
+# [jjc224@jizzo:~/Projects/Matasano/Ruby on master] time ruby 22.rb
 # Seed: 2173666697
 # ruby 22.rb  0.16s user 0.00s system 0% cpu 18:50.16 total
 #

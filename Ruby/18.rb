@@ -28,5 +28,5 @@ puts aes_128_ctr(enc, key)
 
 # Output
 # ----------------------------------------------------
-# phizo@jizzo ~/C/M/Ruby> ruby 18.rb
+# jjc224@jizzo ~/C/M/Ruby> ruby 18.rb
 # Yo, VIP Let's kick it Ice, Ice, baby Ice, Ice, baby

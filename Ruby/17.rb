@@ -176,7 +176,7 @@ end
 # Execute padding_oracle_attack(C, IV) such that the ciphertext C is an (AES-128-CBC) encrypted random string S with PKCS#7 padding (this can be trivially changed).
 puts padding_oracle_attack(*random_ciphertext)
 
-# [phizo@jizzo:~/Projects/Matasano/Ruby on master] time (for i in {1..10}; do ruby 17.rb; done)
+# [jjc224@jizzo:~/Projects/Matasano/Ruby on master] time (for i in {1..10}; do ruby 17.rb; done)
 # -------------------------------------------------------
 # 000008ollin' in my five point oh
 # 000006And a high hat with a souped up tempo

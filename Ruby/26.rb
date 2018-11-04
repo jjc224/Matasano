@@ -55,6 +55,6 @@ puts is_admin?(enc) ? '[+] Welcome, admin!' : "[-] User just ain't good enough."
 
 # Output:
 #------------------------------------------------------------
-# [phizo@jizzo:~/Projects/Matasano/Ruby on master] ruby 26.rb
+# [jjc224@jizzo:~/Projects/Matasano/Ruby on master] ruby 26.rb
 # {"comment1"=>"cooking%20MCs", "userdata"=>"AAAAAAAAAAAAAAAAAAAAA", "admin"=>"true", "comment2"=>"%20like%20a%20pound%20of%20bacon"}
 # [+] Welcome, admin!
