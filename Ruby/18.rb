@@ -11,7 +11,7 @@ def aes_128_ctr(input, key, nonce = 0, format = 'QQ<')    # Default format: 64-b
 	ciphertext  = ''
 	cipher_opts = {mode: :ECB, padded: false}
 
-    for i in 0...blocks.size
+    (0...blocks.size).each do |i|
 		keystream     = [nonce, i].pack(format)
 		enc_keystream = MatasanoLib::AES_128.encrypt(keystream, key, cipher_opts)
 
