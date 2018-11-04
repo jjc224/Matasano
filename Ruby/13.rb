@@ -8,7 +8,7 @@ def kv_parser(data)
 	format_kv = ->(kv) { kv.gsub(/(.*)=(.*)/, '\1: \'\2\'') }
 	kv_pairs  = data.split('&')
 
-	kv_pairs.each.with_index do |kv, i|
+	kv_pairs.each_with_index do |kv, i|
 		parsed << "\t"
 		parsed << format_kv.call(kv)
 		parsed << ',' if i.next < kv_pairs.size
