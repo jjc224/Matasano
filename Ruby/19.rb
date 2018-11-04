@@ -62,9 +62,7 @@ $plaintexts = [
 def decrypt_next_byte(ciphertexts, k)
     column = ''
 
-    ciphertexts.each do |c|
-        column << c[k].to_s
-    end
+    ciphertexts.each { |c| column << c[k].to_s }
 
     solution = MatasanoLib::XOR.brute(column, "ETAOIN SHRDLU.,?;:")
     solution[:key]
@@ -75,11 +73,7 @@ def decrypt_keystream(ciphertexts)
 
     ciphertexts.map.with_index do |c, i|
         candidate_keys = []
-
-        c.size.times do
-            candidate_keys << decrypt_next_byte(ciphertexts, i)
-        end
-
+        c.size.times { candidate_keys << decrypt_next_byte(ciphertexts, i) }
         keystream << candidate_keys[0].to_s
     end
 
