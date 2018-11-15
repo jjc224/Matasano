@@ -41,10 +41,10 @@ end
 # C = P ^ K
 #   = P ^ (P' ^ C')
 #   = P ^ P' ^ C' (as per associativity)
-to_flip = '~admin|true'    # We want to flip this into ';admin=true'.
+to_flip = '~admin|true'  # We want to flip this into ';admin=true'.
 evil    = 'A' * (BLOCKSIZE + 5) << to_flip
 enc     = encrypt_request(evil)
-cp_idx  = 32 + BLOCKSIZE + 5    # 32 bytes to ignore the first key-value, the next an offset to '~admin|true'. These values work on a block boundary, XOR'd against C and/or K.
+cp_idx  = 32 + BLOCKSIZE + 5  # 32 bytes to ignore the first key-value, the next an offset to '~admin|true'. These values work on a block boundary, XOR'd against C and/or K.
 
 flip_bytes = ->(p, pp, cp) { (p.ord ^ pp.ord ^ cp.ord).chr }    # C = P ^ P' ^ C'
 

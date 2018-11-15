@@ -62,8 +62,8 @@ $plaintexts = [
 def decrypt_next_byte(ciphertexts, k)
   column = ''
 
-  ciphertexts.each do
-    |c| column << c[k].to_s
+  ciphertexts.each do |c|
+    column << c[k].to_s
   end
 
   solution = MatasanoLib::XOR.brute(column, "ETAOIN SHRDLU.,?;:")
