@@ -68,9 +68,9 @@ end
 # An insecure implementation of MT19937.
 # Suppose it is a blackbox function (it's a greybox function ;~)).
 def blackbox_mt19937
-  sleep(rand(4..7))
+  sleep(rand(40..1000))
   seed_mt(Time.now.to_i)
-  sleep(rand(4..7))
+  sleep(rand(40..1000))
 
   rand_mt  # Already returns a 32-bit int masked by 0xffffffff ((1 << $w) - 1).
 end
