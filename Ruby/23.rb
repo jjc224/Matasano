@@ -11,7 +11,7 @@ class MT19937
   @@t, @@c = 15, 0xEFC60000
   @@l = 18
    
-  LOWER_MASK = (1 << @@r) - 1    # The binary number representation of 'r' 1's.
+  LOWER_MASK = (1 << @@r) - 1  # The binary number representation of 'r' 1's.
   UPPER_MASK = ((1 << @@w) - 1) & ~LOWER_MASK
 
   # Initialize the generator with a seed.
@@ -24,7 +24,7 @@ class MT19937
     @state    = Array.new(@@n)
     @index    = @@n
     @state[0] = seed
-    f         = 1812433253    # The value for f for MT19937 (32-bit).
+    f         = 1812433253  # The value for f for MT19937 (32-bit).
   
     # Loop over each element.
     for i in 1..(@@n - 1)
@@ -42,7 +42,7 @@ class MT19937
   # Extract a tempered value based on state[index] calling twist() every n numbers.
   def extract_number
     if @index >= @@n
-      raise "Generator was never seeded." if @index > @@n    # Alternatively, seed with constant value; 5489 is used in reference C code.
+      raise "Generator was never seeded." if @index > @@n  # Alternatively, seed with constant value; 5489 is used in reference C code.
       twist()
     end
   
@@ -62,7 +62,7 @@ class MT19937
       @state[i] = @state[(i + @@m) % @@n] ^ xA
     end
   
-    @index = 0    # Not meant as return.
+    @index = 0  # Not meant as return.
   end
   
   def untemper(y)
@@ -124,7 +124,7 @@ puts
 end
 
 # Output
-# -----------
+# ------------------------------------------------------------------------------------
 # [josh@purehacking] [/dev/ttys005] [master ⚡] [~/Projects/Matasano/Ruby]> ruby 23.rb
 # Winner! Here, have a few:
 # 
