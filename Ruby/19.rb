@@ -75,7 +75,11 @@ def decrypt_keystream(ciphertexts)
 
   ciphertexts.each_with_index do |c, i|
     candidate_keys = []
-    c.size.times { candidate_keys << decrypt_next_byte(ciphertexts, i) }
+
+    c.size.times do
+      candidate_keys << decrypt_next_byte(ciphertexts, i)
+    end
+
     keystream << candidate_keys[0].to_s
   end
 
@@ -85,5 +89,7 @@ end
 ciphertexts = $plaintexts.map { |enc| MatasanoLib::AES_128.encrypt(enc.decode64, $AES_KEY, :mode => :CTR) }
 keystream   = decrypt_keystream(ciphertexts)
 
-ciphertexts.each { |enc| p MatasanoLib::XOR.crypt(enc, keystream).unhex }
+ciphertexts.each do |enc|
+  p MatasanoLib::XOR.crypt(enc, keystream).unhex
+end
 

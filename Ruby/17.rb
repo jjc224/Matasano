@@ -68,7 +68,7 @@ require_relative 'matasano_lib/aes_128_common'
 require_relative 'matasano_lib/pkcs7'
 
 AES_KEY   = '0f40cc1380ee2f11467db661d7cc4748'.unhex
-BLOCKSIZE = MatasanoLib::AES_128::BLOCKSIZE    # 16 bytes (128-bit keys).
+BLOCKSIZE = MatasanoLib::AES_128::BLOCKSIZE  # 16 bytes (128-bit keys).
 
 # The first function should select at random one of the following 10 strings.
 # Then, generate a random AES key (which it should save for all future encryptions), pad the string out to the 16-byte AES block size and CBC-encrypt it under that key, providing the caller the ciphertext and IV.
@@ -86,10 +86,10 @@ def random_ciphertext
                   'MDAwMDA5aXRoIG15IHJhZy10b3AgZG93biBzbyBteSBoYWlyIGNhbiBibG93'
                  ]
 
-  str = rand_strings.sample.decode64
-  iv  = 'YELLOW SUBMARINE'
+  str  = rand_strings.sample.decode64
+  iv   = 'YELLOW SUBMARINE'
   opts = {mode: :CBC, iv: iv}
-  enc = MatasanoLib::AES_128.encrypt(str, AES_KEY, opts)
+  enc  = MatasanoLib::AES_128.encrypt(str, AES_KEY, opts)
 
   # Provide the caller the ciphertext and IV.
   [enc, iv]
@@ -97,8 +97,9 @@ end
 
 # The second function should consume the ciphertext produced by the first function, decrypt it, check its padding, and return true or false depending on whether the padding is valid.
 def padding_oracle(ciphertext, iv)
-  opts = {mode: :CBC, iv: iv}
+  opts      = {mode: :CBC, iv: iv}
   plaintext = MatasanoLib::AES_128.decrypt(ciphertext, AES_KEY, opts)
+
   MatasanoLib::PKCS7.valid(plaintext)
 end
 
@@ -158,7 +159,9 @@ def decrypt_last_block(enc, iv)
   known_p2      = []
   known_evil_c1 = []
 
-  BLOCKSIZE.times { |i| known_p2, known_evil_c1 = decrypt_last_byte(enc, iv, known_p2, known_evil_c1) }
+  BLOCKSIZE.times do |i|
+    known_p2, known_evil_c1 = decrypt_last_byte(enc, iv, known_p2, known_evil_c1)
+  end
 
   known_p2
 end
@@ -167,9 +170,12 @@ def padding_oracle_attack(enc, iv)
   enc = [iv] + enc.chunk(BLOCKSIZE)  # The ciphertext C. C0 = IV by definition. CBC mode decryption operates such that P[i] = D(C[i]) ^ C[i-1], so the last operation will be P1 = D(C1) ^ IV (hence 'enc = iv + enc').
   dec = []                           # The plaintext P, the decrypted C via a CBC padding oracle attack.
 
-  (enc.size - 1).times { |i| dec = decrypt_last_block(enc[0..-(i + 1)], iv) + dec }
+  (enc.size - 1).times do |i|
+    dec = decrypt_last_block(enc[0..-(i + 1)], iv) + dec
+  end
 
-  MatasanoLib::PKCS7.strip(dec.pack('C*')) if dec
+  return MatasanoLib::PKCS7.strip(dec.pack('C*')) if dec
+  raise 'Some unexpected bug occured and the padding oracle attack did not succeed (dec = nil).'
 end
 
 
