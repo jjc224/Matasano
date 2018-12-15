@@ -32,7 +32,7 @@ class MT19937
 
   # Initialize the generator with a seed.
   def initialize(seed = nil)
-    if seed == nil
+    if seed.nil?
       @index = @@n + 1
       return
     end
