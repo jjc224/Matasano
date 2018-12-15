@@ -6,7 +6,7 @@ module MatasanoLib
     class << self
       # Expects a hex-encoded ciphertext.
       def detect_mode(ciphertext)
-        blocks      = ciphertext.scan(/.{1,32}/)    # Split into 16-byte blocks; working with hex, so 32 characters.
+        blocks      = ciphertext.scan(/.{1,32}/)  # Split into 16-byte blocks; working with hex, so 32 characters.
         blocks_dups = {}
 
         # Iterate through the unique elements.

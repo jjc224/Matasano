@@ -7,7 +7,7 @@ module MatasanoLib
 
     class << self
       def crypt(input, key, opts = {})  # Default format: 64-bit unsigned little-endian [nonce, block counter].
-        opts       = {nonce: 0, format: 'QQ<'} unless (opts[:nonce] && opts[:format])  # TODO: better.
+        opts       = {nonce: 0, format: 'QQ<'} unless (opts[:nonce] && opts[:format])  # TODO: make better.
         blocks     = input.chunk(AES_128::BLOCKSIZE)
         ciphertext = ''
 

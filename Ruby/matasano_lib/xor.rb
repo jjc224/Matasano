@@ -32,10 +32,10 @@ module MatasanoLib
 
         (0..255).each do |i|
           attempt_key = i.chr
-          xor_key     = (attempt_key * enc.length).to_hex     # Repeat single-key to match size of ciphertext for XOR'ing.
+          xor_key     = (attempt_key * enc.length).to_hex  # Repeat single-key to match size of ciphertext for XOR'ing.
           ret_hex     = hex(enc.to_hex, xor_key)
           plaintext   = ret_hex.unhex
-          score       = plaintext.scan(regexpr).size / plaintext.length.to_f    # Returns the number of matches and normalises the result.
+          score       = plaintext.scan(regexpr).size / plaintext.length.to_f  # Returns the number of matches and normalises the result.
 
           # Update solution data to match more promising solution (higher score).
           if score > solution_data[:score]
