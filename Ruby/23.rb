@@ -1,9 +1,25 @@
 # Challenge 23: clone an MT19937 RNG from its output.
 
+
+# The internal state of MT19937 consists of 624 32-bit integers.
+# For each batch of 624 outputs, MT permutes that internal state. By permuting state regularly, MT19937 achieves a period of 2**19937, which is big.
+# 
+# Each time MT19937 is tapped, an element of its internal state is subjected to a tempering function that diffuses bits through the result.
+# The tempering function is invertible; you can write an "untemper" function that takes an MT19937 output and transforms it back into the corresponding element of the MT19937 state array.
+# 
+# To invert the temper transform, apply the inverse of each of the operations in the temper transform in reverse order.
+# There are two kinds of operations in the temper transform each applied twice; one is an XOR against a right-shifted value, and the other is an XOR against a left-shifted value AND'd with a magic number.
+# So, you'll need code to invert the "right" and the "left" operation.
+# 
+# Once you have "untemper" working, create a new MT19937 generator, tap it for 624 outputs, untemper each of them to recreate the state of the generator, and splice that state into a new instance of the MT19937 generator.
+# 
+# The new "spliced" generator should predict the values of the original.
+
+
 class MT19937
   attr_accessor :state
 
-  # The coefficients of necessary MT19937 (32-bit):
+  # The necessary coefficients of MT19937 (32-bit):
   @@w, @@n, @@m, @@r = 32, 624, 397, 31
   @@a = 0x9908B0DF
   @@u, @@d = 11, 0xFFFFFFFF
@@ -42,7 +58,7 @@ class MT19937
   # Extract a tempered value based on state[index] calling twist() every n numbers.
   def extract_number
     if @index >= @@n
-      raise "Generator was never seeded." if @index > @@n  # Alternatively, seed with constant value; 5489 is used in reference C code.
+      raise 'Generator was never seeded.' if @index > @@n  # Alternatively, seed with constant value; 5489 is used in reference C code.
       twist()
     end
   
@@ -64,7 +80,9 @@ class MT19937
   
     @index = 0  # Not meant as return.
   end
-  
+
+  # Solution for #23 (cloning an MT19937 instance): not part of the actual MT19937 implementation.
+  # Inverts the temper() function, which is part of the actual implementation (a routine which provides diffusion).
   def untemper(y)
     # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX = y
     # 000000000000000000XXXXXXXXXXXXXX = y >> 18
@@ -77,8 +95,8 @@ class MT19937
     # => ["111011111100011", "000000000000000", "00"]
     #
     # As can be observed, the mask creates the same situation as above:
-    #   The lower 17 bits can all trivially be restored all at once. While the shift gives 15 zero lower bits, the mask makes this 17.
-    #   15 ≥ 32 - 17 = 15
+    #   The lower 17 bits can all trivially be restored all at once. While the shift gives 15 zero lower bits, the mask effectively makes it 17.
+    #   17 ≥ 32 - 17 = 15
     y ^= ((y << @@t) & @@c)
 
     # The mask, @@b = 0x9D2C5680:
@@ -86,10 +104,10 @@ class MT19937
     #   => ["10011101", "00101100", "01010110", "10000000"]
     #
     # We need to get the next 7 bits consecutively until we fill all 32:
-    y ^= ((y << @@s) & 0x1680)      # The next 7 bits are 0101101. Hence, we need a bitmask of ['0101101', '0000000'] to XOR against.
-    y ^= ((y << @@s) & 0xC4000)     # The next 7 bits are 1100010. Hence, we need a bitmask of ['0110001', '0000000', '0000000'] to XOR against.
-    y ^= ((y << @@s) & 0xD200000)   # The next 7 bits are 1010010. Hence, we need a bitmask of ['1101001', '0000000', '0000000', '0000000'] to XOR against.
-    y ^= ((y << @@s) & 0x90000000)  # The next 7 bits are 1001000. Hence, we need a bitmask of ['1001', '0000000', '0000000', '0000000', '0000000'] to XOR against.
+    y ^= ((y << @@s) & 0x1680)      # The next 7 bits are 0101101. Hence, we need a bitmask of ["0101101", "0000000"] to XOR against.
+    y ^= ((y << @@s) & 0xC4000)     # The next 7 bits are 1100010. Hence, we need a bitmask of ["0110001", "0000000", "0000000"] to XOR against.
+    y ^= ((y << @@s) & 0xD200000)   # The next 7 bits are 1010010. Hence, we need a bitmask of ["1101001", "0000000", "0000000", "0000000"] to XOR against.
+    y ^= ((y << @@s) & 0x90000000)  # The next 7 bits are 1001000. Hence, we need a bitmask of ["1001", "0000000", "0000000", "0000000", "0000000"] to XOR against.
 
     # Same thing. 11 bits at a time.
     y ^= ((y >> @@u) & 0xFFC00000)  # ["11111111110", "00000000000", "0000000000"]
@@ -106,9 +124,7 @@ def clone_mt19937(mt)
   end
 end
 
-# Once you have "untemper" working, create a new MT19937 generator, tap it for 624 outputs, untemper each of them to recreate the state of the generator, and splice that state into a new instance of the MT19937 generator.
-# The new "spliced" generator should predict the values of the original.
-mt_rand = MT19937.new(0x1337)
+mt_rand       = MT19937.new(0x1337)
 mt_rand_clone = clone_mt19937(mt_rand)
 
 # Test clone was successful.
