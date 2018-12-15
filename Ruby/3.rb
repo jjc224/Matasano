@@ -14,10 +14,10 @@ def xor_brute(enc, charset)
 
 	(0..255).each do |i|
 		attempt_key = i.chr
-		xor_key     = (attempt_key * (enc.length / 2)).to_hex     # Repeat single-key to match size of ciphertext for XOR'ing.
+		xor_key     = (attempt_key * (enc.length / 2)).to_hex  # Repeat single-key to match size of ciphertext for XOR'ing.
 		ret_hex     = MatasanoLib::XOR.hex(enc, xor_key)
 		plaintext   = ret_hex.unhex
-		score       = plaintext.scan(regexpr).size / plaintext.length.to_f    # Returns the number of matches and normalises the result.
+		score       = plaintext.scan(regexpr).size / plaintext.length.to_f  # Returns the number of matches and normalises the result.
 
 		# Update solution data to match more promising solution (higher score).
 		if score > solution_data[:score]
@@ -41,7 +41,7 @@ def output_solution(solution = {}, opts = {})
 end
 
 enc           = '1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736'
-charset       = 'ETAOIN SHRDLU'    # Frequency analysis: 12 most common characters in the English language.
+charset       = 'ETAOIN SHRDLU'  # Frequency analysis: 12 most common characters in the English language.
 solution_data = xor_brute(enc, charset)
 
 output_solution(solution_data)

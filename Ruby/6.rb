@@ -24,7 +24,7 @@ def hamming_distance(a, b)
 		ret << (a_byte ^ b.bytes[i]).to_s(2)
 	end
 
-	ret.count('1')    # Return the number of set bits (the number of differing bits, as per XOR).
+	ret.count('1')  # Return the number of set bits (the number of differing bits, as per XOR).
 end
 
 enc      = Base64.decode64(open('http://cryptopals.com/static/challenge-data/6.txt') { |f| f.read }.strip!)
@@ -41,7 +41,7 @@ hamdists = Hash.new
 end
 
 keysize           = hamdists.sort_by { |keysize, dist| dist }.first[0]
-enc_blocks        = enc.chunk(keysize)    # Raw chunks each of size 'keysize' (step 5).
+enc_blocks        = enc.chunk(keysize)  # Raw chunks each of size 'keysize' (step 5).
 transposed_blocks = [''] * keysize
 
 # Transpose blocks (step 6).

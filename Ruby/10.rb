@@ -12,7 +12,7 @@ def pkcs7_strip(str)
 	str[0..pad_start - 1]
 end
 
-def aes_cbc_decrypt(enc, key, iv = "\0" * 16)    # 16 byte blocks (128-bit cipher).
+def aes_cbc_decrypt(enc, key, iv = "\0" * 16)  # 16 byte blocks (128-bit cipher).
 	enc_blocks = enc.scan(/.{1,16}/m)
 	dec_block  = MatasanoLib::AES_128_ECB.decrypt(enc_blocks[0], key)
 	plaintext  = [MatasanoLib::XOR.crypt(dec_block, iv)].pack('H*')

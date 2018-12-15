@@ -41,7 +41,7 @@ cipher_mode = MatasanoLib::AES_128_COMMON.detect_mode(input)
 # 5. Match the output of the one-byte-short input to one of the entries in your dictionary. You've now discovered the first byte of unknown-string.
 # 6. Repeat for the next byte.
 decrypted  = ''
-secret_len = encryption_oracle('').length    # If we don't put anything in the oracle, then that must be how much we roughly need to decrypt.
+secret_len = encryption_oracle('').length  # If we don't put anything in the oracle, then that must be how much we roughly need to decrypt.
 input      = 'A' * (secret_len - 1)
 num_blocks = secret_len / blocksize
 
@@ -73,8 +73,8 @@ puts "[+] Decrypting..."
     # If nothing was found, we're most likely done (or something unexpected occurred).
     break if dictionary[block].nil?
 
-    input.slice!(0)                   # Reduce the A's by one, shifting left.
-    decrypted << dictionary[block]    # Append decrypted data for next iteration (and, ideally, output).
+    input.slice!(0)                 # Reduce the A's by one, shifting left.
+    decrypted << dictionary[block]  # Append decrypted data for next iteration (and, ideally, output).
 
     break if decrypted.length == secret_len
 end

@@ -12,7 +12,7 @@ def output_solution(solution = {}, opts = {})
     puts "Score: #{solution[:score]}" if opts[:with_score]
 end
 
-charset       = 'ETAOIN SHRDLU'    # Frequency analysis: 12 most common characters in the English language.
+charset       = 'ETAOIN SHRDLU'  # Frequency analysis: 12 most common characters in the English language.
 solution_data = {score: 0}
 
 MatasanoLib::URL.read_each_line('http://cryptopals.com/static/challenge-data/4.txt') do |line|
