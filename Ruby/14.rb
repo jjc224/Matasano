@@ -34,7 +34,7 @@ end
 
 def determine_prefix_length
 	blocksize  = determine_blocksize
-	input      = 'A' * blocksize * 3    # 48 A's.
+	input      = 'A' * blocksize * 3  # 48 A's.
 	ciphertext = encryption_oracle(input)
 	blocks     = ciphertext.chunk(blocksize).to_hex
 	index      = 0
@@ -46,7 +46,7 @@ def determine_prefix_length
 		right = blocks[i]     unless i == blocks.size
 
 		if left == right
-			index = i    # We want the right hand.
+			index = i  # We want the right hand.
 			break
 		end
 	end
@@ -85,10 +85,10 @@ cipher_mode = MatasanoLib::AES_128_COMMON.detect_mode(input)
 decrypted = ''
 
 prefix_len     = determine_prefix_length
-prefix_pad_len = (blocksize - (prefix_len % blocksize))    # The random prefix needs to be aligned on a block boundary, so pad it if needed.
+prefix_pad_len = (blocksize - (prefix_len % blocksize))  # The random prefix needs to be aligned on a block boundary, so pad it if needed.
 prefix_len    += prefix_pad_len
 
-secret_len = encryption_oracle('').length    # If we don't put anything in the oracle, then that must be how much we roughly need to decrypt.
+secret_len = encryption_oracle('').length  # If we don't put anything in the oracle, then that must be how much we roughly need to decrypt.
 input      = 'A' * (secret_len + prefix_pad_len - 1)
 num_blocks = secret_len / blocksize
 
@@ -122,8 +122,8 @@ puts "[+] Decrypting..."
 	# If nothing was found, we're most likely done (or something unexpected occurred).
 	break if dictionary[block].nil?
 
-	input.slice!(0)                   # Reduce the A's by one, shifting left.
-	decrypted << dictionary[block]    # Append decrypted data for next iteration (and, ideally, output).
+	input.slice!(0)                 # Reduce the A's by one, shifting left.
+	decrypted << dictionary[block]  # Append decrypted data for next iteration (and, ideally, output).
 
 	break if decrypted.length == secret_len
 end
