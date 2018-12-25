@@ -44,8 +44,8 @@ end
 # Use the same idea to generate a random "password reset token" using MT19937 seeded from the current time.
 def password_token(user = USERNAME)
   key       = Time.now.to_i
-  prefix    = SecureRandom.random_bytes(rand(0..64))
-  plaintext = "#{prefix};#{user};#{user}@cryptopals.com"
+  prefix    = SecureRandom.random_bytes(rand(0..32))
+  plaintext = "#{prefix};#{user};#{user}@site.com"
 
   crypt(plaintext, key)
 end
@@ -68,11 +68,11 @@ puts "[-] Attempting to crack password_token('#{USERNAME}') = '#{token.to_hex}'"
 puts "[+] Recovered key from #{USERNAME}'s password token: #{crack_password_token(token)}"
 
 # Output
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # [josh@purehacking] [/dev/ttys002] [master ⚡] [~/Projects/Matasano/Ruby]> ruby 24.rb
-# [-] Ciphertext: c29bc38bc2801108c2a32a5fc3b3c2b7c2931cc29b45c2bc0e42c2aa172516c29cc3a2725f4a1c07c3b1c2b273c2ad50c28ac28b7b18c3aac2af26c386c3922a
+# [-] Ciphertext: c2bc46707d6c02c3a3c2aac386c38ac38326c39a6ec282c2b30d6ac2aec284c38ec29a681c367fc3b35e33c287420fc29476c2aa67c386c3a91a12c2b03802c3912e25c393096d2a
 # [-] Attempting to recover key (16-bit MT19937 seed).
-# [+] Recovered key: 54395
+# [+] Recovered key: 24436
 # 
-# [-] Attempting to crack password_token('SomeSillyName') = 'c28f5cc29a37c3a4c2bdc3bb553c72c2841ac2a77ec38364c288c3bbc3a97616c3ab2d503f3f58c2af1b22c2b1c28171c2b5c386c293c2aa6306545927c3be1cc29c0461687f4fc2a82ac292520dc297c3b4c293c2b2c2b6c39dc282c38564c3bbc3933804c296'
-# [+] Recovered key from SomeSillyName's password token: 1545738925
+# [-] Attempting to crack password_token('SomeSillyName') = '20c38bc288c282c2a7c2a8c29977c399c288c3b72603c3815cc29ac2a6c38ac295c3b64d70c293c3ae2f79c296c38a5fc3952111c3a3333e3258173ac29742'
+# [+] Recovered key from SomeSillyName's password token: 1545739461
