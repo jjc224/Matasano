@@ -7,17 +7,17 @@ require_relative 'matasano_lib/pkcs7'
 $AES_KEY = 'd41d19c407130e53228994fa192dcaf7'.unhex
 
 def encrypt_request(input)
-	input = "comment1=cooking%20MCs;userdata=" << input.gsub(/([;=])/, '\'\1\'') << ";comment2=%20like%20a%20pound%20of%20bacon"
-	input = MatasanoLib::PKCS7.pad(input)
+  input = "comment1=cooking%20MCs;userdata=" << input.gsub(/([;=])/, '\'\1\'') << ";comment2=%20like%20a%20pound%20of%20bacon"
+  input = MatasanoLib::PKCS7.pad(input)
 
-	MatasanoLib::AES_128_CBC.encrypt(input, $AES_KEY)
+  MatasanoLib::AES_128_CBC.encrypt(input, $AES_KEY)
 end
 
 def is_admin?(input)
-	plaintext = MatasanoLib::AES_128_CBC.decrypt(input, $AES_KEY)
-	data_pair = Hash[plaintext.split(';').map { |x| x.split('=') }]
+  plaintext = MatasanoLib::AES_128_CBC.decrypt(input, $AES_KEY)
+  data_pair = Hash[plaintext.split(';').map { |x| x.split('=') }]
 
-	data_pair['admin']
+  data_pair['admin']
 end
 
 # If you've written the first function properly, it should not be possible to provide user input to it that will generate the string the second function is looking for.
