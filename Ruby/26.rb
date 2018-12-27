@@ -10,8 +10,6 @@
 #   The mathematics are all defined in the block cipher mode.
 #   It's all a matter of understanding how XOR operations in CTR take place for encryption/decryption and using it to your advantage.
 
-# TODO: if I have the time, write the solution more nicely (and touch up MT19937 code and place into its own module).
-
 require_relative 'matasano_lib/monkey_patch'
 require_relative 'matasano_lib/aes_128'
 require_relative 'matasano_lib/pkcs7'
