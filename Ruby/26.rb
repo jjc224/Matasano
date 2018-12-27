@@ -16,8 +16,8 @@ require_relative 'matasano_lib/monkey_patch'
 require_relative 'matasano_lib/aes_128'
 require_relative 'matasano_lib/pkcs7'
 
-BLOCKSIZE = MatasanoLib::AES_128::BLOCKSIZE    # 16 bytes.
-NONCE     = rand((0..0xffffff))    # [0, 2 ** 32)
+BLOCKSIZE = MatasanoLib::AES_128::BLOCKSIZE  # 16 bytes.
+NONCE     = rand(0..0xffffff)  # [0, 2 ** 32)
 AES_KEY   = 'd41d19c407130e53228994fa192dcaf7'.unhex
 
 def encrypt_request(input)
@@ -46,7 +46,7 @@ evil    = 'A' * (BLOCKSIZE + 5) << to_flip
 enc     = encrypt_request(evil)
 cp_idx  = 32 + BLOCKSIZE + 5  # 32 bytes to ignore the first key-value, the next an offset to '~admin|true'. These values work on a block boundary, XOR'd against C and/or K.
 
-flip_bytes = ->(p, pp, cp) { (p.ord ^ pp.ord ^ cp.ord).chr }    # C = P ^ P' ^ C'
+flip_bytes = ->(p, pp, cp) { (p.ord ^ pp.ord ^ cp.ord).chr }  # C = P ^ P' ^ C'
 
 enc[cp_idx]     = flip_bytes.call(';', '~', enc[cp_idx])
 enc[cp_idx + 6] = flip_bytes.call('=', '|', enc[cp_idx + 6])
