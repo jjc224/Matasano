@@ -23,22 +23,22 @@ def is_ascii_compliant?(input)
 end
 
 def encrypt_request(input)
-	input = "comment1=cooking%20MCs;userdata=" << input.gsub(/([;=])/, '\'\1\'') << ";comment2=%20like%20a%20pound%20of%20bacon"
-	input = PKCS7.pad(input)
+  input = "comment1=cooking%20MCs;userdata=" << input.gsub(/([;=])/, '\'\1\'') << ";comment2=%20like%20a%20pound%20of%20bacon"
+  input = PKCS7.pad(input)
 
-	AES_128.encrypt(input, AES_KEY, :mode => :CBC, :iv => AES_KEY)
+  AES_128.encrypt(input, AES_KEY, :mode => :CBC, :iv => AES_KEY)
 end
 
 def is_admin?(input)
-	plaintext = AES_128.decrypt(input, AES_KEY, :mode => :CBC, :iv => AES_KEY)
+  plaintext = AES_128.decrypt(input, AES_KEY, :mode => :CBC, :iv => AES_KEY)
 
-    raise(AsciiComplianceError, plaintext) unless is_ascii_compliant?(plaintext)
+  raise(AsciiComplianceError, plaintext) unless is_ascii_compliant?(plaintext)
 
-    # This will never be executed due to the exception above (with a solution to the challenge given).
-    # This code, from challenge #16, will remain here to add to the entire meaning of the simulated application.
-    # As without it, this would be a completely simulated exploit (i.e., there is no application).
-	data_pair = Hash[plaintext.split(';').map { |x| x.split('=') }]
-	data_pair['admin']
+  # This will never be executed due to the exception above (with a solution to the challenge given).
+  # This code, from challenge #16, will remain here to add to the entire meaning of the simulated application.
+  # As without it, this would be a completely simulated exploit (i.e., there is no application).
+  data_pair = Hash[plaintext.split(';').map { |x| x.split('=') }]
+  data_pair['admin']
 end
 
 # Use your code to encrypt a message that is at least 3 blocks long:
