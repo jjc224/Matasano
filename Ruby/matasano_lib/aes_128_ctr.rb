@@ -12,10 +12,10 @@ module MatasanoLib
         ciphertext = ''
 
         for i in 0...blocks.size
-          keystream     = [opts[:nonce], i].pack(opts[:format])
-          enc_keystream = AES_128.encrypt(keystream, key, :mode => :ECB, :padded => false)
+          counter   = [opts[:nonce], i].pack(opts[:format])
+          keystream = AES_128.encrypt(counter, key, :mode => :ECB, :padded => false)
 
-          ciphertext << XOR.crypt(blocks[i], enc_keystream).unhex
+          ciphertext << XOR.crypt(blocks[i], keystream).unhex
         end
 
         ciphertext
