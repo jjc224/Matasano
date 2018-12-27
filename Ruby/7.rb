@@ -4,12 +4,12 @@ require 'openssl'
 require_relative 'matasano_lib/url'
 
 def aes_ecb_decrypt(enc, key)
-	decipher = OpenSSL::Cipher.new('AES-128-ECB')
-	
-	decipher.decrypt
-	decipher.key = key
-	
-	decipher.update(enc) + decipher.final
+  decipher = OpenSSL::Cipher.new('AES-128-ECB')
+
+  decipher.decrypt
+  decipher.key = key
+
+  decipher.update(enc) + decipher.final
 end
 
 enc = MatasanoLib::URL.decode64('http://cryptopals.com/static/challenge-data/7.txt')

@@ -4,30 +4,30 @@ require_relative 'matasano_lib/monkey_patch'
 
 # Key/value parser of form: foo=bar&baz=qux&zap=zazzle
 def kv_parser(data)
-	parsed    = "{\n"
-	format_kv = ->(kv) { kv.gsub(/(.*)=(.*)/, '\1: \'\2\'') }
-	kv_pairs  = data.split('&')
+  parsed    = "{\n"
+  format_kv = ->(kv) { kv.gsub(/(.*)=(.*)/, '\1: \'\2\'') }
+  kv_pairs  = data.split('&')
 
-	kv_pairs.each_with_index do |kv, i|
-		parsed << "\t"
-		parsed << format_kv.call(kv)
-		parsed << ',' if i.next < kv_pairs.size
-		parsed << "\n"
-	end
+  kv_pairs.each_with_index do |kv, i|
+    parsed << "\t"
+    parsed << format_kv.call(kv)
+    parsed << ',' if i.next < kv_pairs.size
+    parsed << "\n"
+  end
 
-	parsed << '}'
+  parsed << '}'
 end
 
 def profile_for(email)
-	'email=' << email.tr('&=', '') << '&uid=10&role=user'
+  'email=' << email.tr('&=', '') << '&uid=10&role=user'
 end
 
 def encrypt_profile(email, key)
-	MatasanoLib::AES_128_ECB.encrypt(profile_for(email), key)
+  MatasanoLib::AES_128_ECB.encrypt(profile_for(email), key)
 end
 
 def decrypt_profile(enc_profile, key)
-	MatasanoLib::AES_128_ECB.decrypt(enc_profile, key)
+  MatasanoLib::AES_128_ECB.decrypt(enc_profile, key)
 end
 
 # It takes 9 bytes to produce 3 blocks, with no input resulting in 2 blocks.

@@ -5,29 +5,29 @@ require_relative 'matasano_lib/xor'
 require_relative 'matasano_lib/aes_128_ecb'
 
 def pkcs7_strip(str)
-	padding   = str[-1]
-	pad_start = str.length - padding.ord
+  padding   = str[-1]
+  pad_start = str.length - padding.ord
 
-	return str if str[pad_start..-1] != padding * padding.ord
-	str[0..pad_start - 1]
+  return str if str[pad_start..-1] != padding * padding.ord
+  str[0..pad_start - 1]
 end
 
 def aes_cbc_decrypt(enc, key, iv = "\0" * 16)  # 16 byte blocks (128-bit cipher).
-	enc_blocks = enc.scan(/.{1,16}/m)
-	dec_block  = MatasanoLib::AES_128_ECB.decrypt(enc_blocks[0], key)
-	plaintext  = [MatasanoLib::XOR.crypt(dec_block, iv)].pack('H*')
-	prev_block = enc_blocks[0]
-	
-	# Neglect the first block and iterate through the rest.
-	enc_blocks.shift
-	enc_blocks.each do |curr_block|
-		dec_block = MatasanoLib::AES_128_ECB.decrypt(curr_block, key)
-		plaintext << [MatasanoLib::XOR.crypt(dec_block, prev_block)].pack('H*')
-		
-		prev_block = curr_block
-	end
-	
-	pkcs7_strip(plaintext)
+  enc_blocks = enc.scan(/.{1,16}/m)
+  dec_block  = MatasanoLib::AES_128_ECB.decrypt(enc_blocks[0], key)
+  plaintext  = [MatasanoLib::XOR.crypt(dec_block, iv)].pack('H*')
+  prev_block = enc_blocks[0]
+
+  # Neglect the first block and iterate through the rest.
+  enc_blocks.shift
+  enc_blocks.each do |curr_block|
+    dec_block = MatasanoLib::AES_128_ECB.decrypt(curr_block, key)
+    plaintext << [MatasanoLib::XOR.crypt(dec_block, prev_block)].pack('H*')
+
+    prev_block = curr_block
+  end
+
+  pkcs7_strip(plaintext)
 end
 
 enc = MatasanoLib::URL.decode64('http://cryptopals.com/static/challenge-data/10.txt')

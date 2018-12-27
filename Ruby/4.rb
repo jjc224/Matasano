@@ -5,22 +5,22 @@ require_relative 'matasano_lib/url'
 require_relative 'matasano_lib/xor'
 
 def output_solution(solution = {}, opts = {})
-    puts "Key: #{solution[:key]}"
-    puts "Ciphertext: #{solution[:ciphertext]}"
-    puts "Plaintext: #{solution[:plaintext]}"
+  puts "Key: #{solution[:key]}"
+  puts "Ciphertext: #{solution[:ciphertext]}"
+  puts "Plaintext: #{solution[:plaintext]}"
 
-    puts "Score: #{solution[:score]}" if opts[:with_score]
+  puts "Score: #{solution[:score]}" if opts[:with_score]
 end
 
 charset       = 'ETAOIN SHRDLU'  # Frequency analysis: 12 most common characters in the English language.
 solution_data = {score: 0}
 
 MatasanoLib::URL.read_each_line('http://cryptopals.com/static/challenge-data/4.txt') do |line|
-    temp = MatasanoLib::XOR.brute(line.unhex, charset)
+  temp = MatasanoLib::XOR.brute(line.unhex, charset)
 
-    if temp[:score] > solution_data[:score]
-        solution_data = temp
-    end
+  if temp[:score] > solution_data[:score]
+    solution_data = temp
+  end
 end
 
 output_solution(solution_data) unless solution_data.nil?

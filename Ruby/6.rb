@@ -17,14 +17,14 @@ require_relative 'matasano_lib/xor'
 require_relative 'matasano_lib/monkey_patch'
 
 def hamming_distance(a, b)
-	raise "Unequal buffers passed." if a.length != b.length
-	ret = String.new
+  raise "Unequal buffers passed." if a.length != b.length
+  ret = String.new
 
-	a.bytes.each_with_index do |a_byte, i|
-		ret << (a_byte ^ b.bytes[i]).to_s(2)
-	end
+  a.bytes.each_with_index do |a_byte, i|
+    ret << (a_byte ^ b.bytes[i]).to_s(2)
+  end
 
-	ret.count('1')  # Return the number of set bits (the number of differing bits, as per XOR).
+  ret.count('1')  # Return the number of set bits (the number of differing bits, as per XOR).
 end
 
 enc      = Base64.decode64(open('http://cryptopals.com/static/challenge-data/6.txt') { |f| f.read }.strip!)
@@ -32,12 +32,12 @@ hamdists = Hash.new
 
 # Step 3 and 4.
 (2..40).each do |keysize|
-	distance  = hamming_distance(enc[0..keysize], enc[keysize..keysize * 2])
-	distance += hamming_distance(enc[keysize..keysize * 2], enc[keysize * 2..keysize * 3])
-	distance += hamming_distance(enc[keysize..keysize * 3], enc[keysize * 2..keysize * 4])
-	distance /= 3
+  distance  = hamming_distance(enc[0..keysize], enc[keysize..keysize * 2])
+  distance += hamming_distance(enc[keysize..keysize * 2], enc[keysize * 2..keysize * 3])
+  distance += hamming_distance(enc[keysize..keysize * 3], enc[keysize * 2..keysize * 4])
+  distance /= 3
 
-	hamdists[keysize] = (distance.to_f / keysize)
+  hamdists[keysize] = (distance.to_f / keysize)
 end
 
 keysize           = hamdists.sort_by { |keysize, dist| dist }.first[0]
@@ -46,18 +46,18 @@ transposed_blocks = [''] * keysize
 
 # Transpose blocks (step 6).
 for i in (0...keysize) do
-	enc_blocks.each do |block|
-		unless block[i].nil?
-			transposed_blocks[i] += block[i]
-		end
-	end
+  enc_blocks.each do |block|
+    unless block[i].nil?
+      transposed_blocks[i] += block[i]
+    end
+  end
 end
 
 key = String.new
 
 # Step 7 and 8.
 transposed_blocks.each_with_index do |block, i|
-	key << MatasanoLib::XOR.brute(block, 'ETAOIN SHRDLU')[:key]
+  key << MatasanoLib::XOR.brute(block, 'ETAOIN SHRDLU')[:key]
 end
 
 puts "Key: '" << key << "'\n\n"

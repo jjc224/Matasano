@@ -2,23 +2,23 @@
 require_relative 'matasano_lib/url'
 
 MatasanoLib::URL.read_each_line('http://cryptopals.com/static/challenge-data/8.txt') do |line|
-	blocks      = line.scan(/.{1,32}/)  # Split into 16-byte blocks; working with hex, so 32 characters.
-	blocks_dups = Hash.new
-	
-	# Iterate through the unique elements.
-	# Store the count of each duplicate element in a hash for output.
-	blocks.uniq.select do |block|
-		count = blocks.count(block)
-		blocks_dups[block] = count if count > 1
-	end
-	
-	unless blocks_dups.empty?
-		puts "[ Determined AES-128-ECB ciphertext ]"
-		puts "#{line}\n\n"
+  blocks      = line.scan(/.{1,32}/)  # Split into 16-byte blocks; working with hex, so 32 characters.
+  blocks_dups = Hash.new
 
-		puts "[ Common 16-byte blocks ]"
-		blocks_dups.each_with_index { |(k, v), i| puts "\t#{i.next}. \"#{k}\" occurs #{v} times."}
-	end
+  # Iterate through the unique elements.
+  # Store the count of each duplicate element in a hash for output.
+  blocks.uniq.select do |block|
+    count = blocks.count(block)
+    blocks_dups[block] = count if count > 1
+  end
+
+  unless blocks_dups.empty?
+    puts "[ Determined AES-128-ECB ciphertext ]"
+    puts "#{line}\n\n"
+
+    puts "[ Common 16-byte blocks ]"
+    blocks_dups.each_with_index { |(k, v), i| puts "\t#{i.next}. \"#{k}\" occurs #{v} times."}
+  end
 end
 
 # Output:

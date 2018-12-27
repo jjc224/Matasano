@@ -3,13 +3,13 @@
 # In repeating-key XOR, you'll sequentially apply each byte of the key; the first byte of plaintext will be XOR'd against I, the next C, the next E, then I again for the 4th byte, and so on.
 
 def xor_encrypt(plaintext, key)
-	ciphertext = String.new
+  ciphertext = String.new
 
-	plaintext.chars.each_with_index do |c, i|
-		ciphertext << "%02x" % (c.bytes[0] ^ key[i % key.length].bytes[0])
-	end
+  plaintext.chars.each_with_index do |c, i|
+    ciphertext << "%02x" % (c.bytes[0] ^ key[i % key.length].bytes[0])
+  end
 
-	ciphertext
+  ciphertext
 end
 
 puts xor_encrypt("Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal", 'ICE')
