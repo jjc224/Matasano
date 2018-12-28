@@ -41,6 +41,8 @@ def is_admin?(input)
   data_pair['admin']
 end
 
+# NOTE to self: you clearly only need one ciphertext block rather than three to carry out this attack.
+
 # Use your code to encrypt a message that is at least 3 blocks long:
 # AES-CBC(P_1, P_2, P_3) -> C_1, C_2, C_3
 ciphertext = encrypt_request('<user data>')
