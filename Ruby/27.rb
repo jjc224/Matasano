@@ -70,7 +70,10 @@ rescue AsciiComplianceError => e
   #         = IV
   #
   # As key = IV, we can hence recover the key by recovering the IV.
-  puts "Key: #{XOR.crypt(e.message[0, BLOCKSIZE], e.message[BLOCKSIZE * 2, BLOCKSIZE])}"
+  p1 = e.message[0, BLOCKSIZE]
+  p3 = e.message[BLOCKSIZE * 2, BLOCKSIZE]
+
+  puts "Key: #{XOR.crypt(p1, p3)}"
 end
 
 # Output:
