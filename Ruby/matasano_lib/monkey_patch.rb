@@ -1,39 +1,49 @@
 class String
-	def chunk(size)
-		scan(/.{1,#{size}}/m)
-	end
+  def chunk(size)
+    scan(/.{1,#{size}}/m)
+  end
 
-	def to_hex
-		unpack('H*')[0]
-	end
+  def to_hex
+    unpack('H*')[0]
+  end
 
-	def unhex
-		[self].pack('H*')
-	end
+  def unhex
+    [self].pack('H*')
+  end
 
-	def encode64
-		[self].pack('m')
-	end
+  def encode64
+    [self].pack('m')
+  end
 
-	def decode64
-		unpack('m')[0]
-	end
+  def decode64
+    unpack('m')[0]
+  end
+end
+
+class Integer
+  def to_hex
+    self.to_s(16)
+  end
+
+  def unhex
+    self.to_s(10)
+  end
 end
 
 class Array
-	def to_hex
-		map { |x| x.unpack('H*')[0] }
-	end
+  def to_hex
+    map { |x| x.unpack('H*')[0] }
+  end
 
-	def unhex
-		map { |x| [x].pack('H*') }
-	end
+  def unhex
+    map { |x| [x].pack('H*') }
+  end
 
-	def encode64
-		map { |x| [x].pack('m') }
-	end
+  def encode64
+    map { |x| [x].pack('m') }
+  end
 
-	def decode64
-		map { |x| x.unpack('m')[0] }
-	end
+  def decode64
+    map { |x| x.unpack('m')[0] }
+  end
 end
