@@ -40,7 +40,8 @@ class SHA1
     # Pre-processing:
     # ---------------
     # Append the bit '1' to the message; e.g., by adding 0x80 if message length is a multiple of 8 bits.
-    message += 0x80.chr  # It's always a multiple of 8 bits, as per `@ml`.
+    # (We presume each character to take up 8 bits, so that's fine).
+    message += "\x80"
 
     # Append 0 ≤ k < 512 bits '0', such that the resulting message length in bits is congruent to −64 ≡ 448 (mod 512).
     # Since 512 is a power of two (2**9), it is much faster to perform modulo via bitwise (i & (n - 1)) than via the modulo operator (%).
