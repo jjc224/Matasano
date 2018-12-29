@@ -24,10 +24,6 @@ class Integer
   def to_hex
     self.to_s(16)
   end
-
-  def unhex
-    self.to_s(10)
-  end
 end
 
 class Array
