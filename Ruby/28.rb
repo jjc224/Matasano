@@ -10,9 +10,8 @@
 
 require_relative 'matasano_lib/monkey_patch'
 
-# TODO: Add to monkey patch and include a right-rotate just in case for the future?
-#       Make generic if so? Simply done by an extra param n such that the mask becomes (1 << n) - 1 with value >> (n - shift).
 # 32-bit cyclic left-rotation.
+# (Generic version added to monkey patch.)
 def left_rotate(value, shift)
   ((value << shift) & 0xffffffff) | (value >> (32 - shift))
 end
