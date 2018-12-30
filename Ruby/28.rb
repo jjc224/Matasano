@@ -68,8 +68,8 @@ class SHA1
       # Main loop:
       (0..79).each do |i|
         if i <= 19
-         f = (b & c) | ((~b) & d)
-         k = 0x5A827999
+          f = (b & c) | ((~b) & d)
+          k = 0x5A827999
         elsif i.between?(20, 39)
           f = b ^ c ^ d
           k = 0x6ED9EBA1
