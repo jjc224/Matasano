@@ -24,6 +24,10 @@ class Integer
   def to_hex
     self.to_s(16)
   end
+
+  def left_rotate(shift, n = 32)
+    ((self << shift) & ((1 << n) - 1)) | (self >> (n - shift))
+  end
 end
 
 class Array
