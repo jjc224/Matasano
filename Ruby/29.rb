@@ -33,8 +33,6 @@ class SHA1
   # Modify your SHA-1 implementation so that callers can pass in new values for "a", "b", "c", etc. (they normally start at magic numbers).
   # With the registers "fixated", hash the additional data you want to forge.
   def initialize(message, ml = nil, h0 = 0x67452301, h1 = 0xEFCDAB89, h2 = 0x98BADCFE, h3 = 0x10325476, h4 = 0xC3D2E1F0)
-    # p "initialize(): #{[h0, h1, h2, h3, h4]}"
-
     # Message length in bits (always a multiple of the number of bits in a character).
     ml ||= message.size * 8
 
@@ -49,9 +47,6 @@ class SHA1
 
     # Append ml, the original message length, as a 64-bit big-endian integer. Thus, the total length is a multiple of 512 bits.
     message += [ml].pack('Q>')  # Unsigned 64-bit integer (big-endian).
-
-    # XXX
-    # p "message: #{message}"
 
     # Process the message in successive 512-bit chunks:
     message.chunk(64).each do |chunk|
@@ -102,8 +97,6 @@ class SHA1
       h4 = (h4 + e) & 0xffffffff
     end
 
-    p "initialize() digest state: #{[h0, h1, h2, h3, h4]}"
-
     # Produce the final hash value (big-endian) as a 160-bit number:
     hh = (h0 << 128) | (h1 << 96) | (h2 << 64) | (h3 << 32) | h4
 
@@ -113,8 +106,12 @@ class SHA1
 end
 
 class SHA1_MAC < SHA1
-  def initialize(key, message)
-    super(key + message)
+  def initialize(key, message, ml = nil, h0 = 0x67452301, h1 = 0xEFCDAB89, h2 = 0x98BADCFE, h3 = 0x10325476, h4 = 0xC3D2E1F0)
+    super(key + message, ml, h0, h1, h2, h3, h4)
+  end
+
+  def verify(message)
+    @digest == SHA1_MAC.new($key, message).digest
   end
 end
 
@@ -138,49 +135,37 @@ def state(digest)
   d = (digest >> 32)  & 0xffffffff
   e = digest          & 0xffffffff
 
-  # p "state() 1: #{[a, b, c, d, e]}"
   [a, b, c, d, e]
 end
 
 def verify(key, message, digest)
-  p "verify(): #{{:key => key, :message => message, :digest => digest, :digest2 => SHA1_MAC.new(key, message).digest}}"
   SHA1_MAC.new(key, message).digest == digest
+end
+
+# We will assume up to a 128-bit key (for no real reason other than demonstration).
+def length_extension_attack(mac, message, payload)
+  (0..16).each do |key_size|
+    forged_message = pad('A' * key_size + message)[key_size..-1] + payload
+    sha1_mac       = SHA1_MAC.new('', payload, (key_size + forged_message.size) * 8, *state(mac))
+    forged         = sha1_mac.digest
+  
+    return [forged_message, forged, key_size] if sha1_mac.verify(forged_message)  #verify($key, forged_message, forged)
+  end
+
+  raise 'SHA-1 length-extension attack failed.'
 end
 
 # Using this attack, generate a secret-prefix MAC under a secret key (choose a random word from /usr/share/dict/words or something) of the string:
 # "comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon"
-#
-# key     = File.readlines('/usr/share/dict/words').sample.chomp
-key     = 'test'
+$key    = File.readlines('/usr/share/dict/words').sample[0, 16].chomp  # Ensure the key is up to 128 bits as per this particular demonstration.
 message = 'comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon'
 
 # Now, take the SHA-1 secret-prefix MAC of the message you want to forge -- this is just a SHA-1 hash -- and break it into 32 bit SHA-1 registers (SHA-1 calls them "a", "b", "c", etc.).
 # XXX
 # Forge a variant of this message that ends with ";admin=true".
-sha1_mac = SHA1_MAC.new(key, message).digest
+sha1_mac = SHA1_MAC.new($key, message).digest
 
-p "digest state: #{state(sha1_mac)}"
-
-payload        = ';admin=true'
-forged_message = pad(key + message) + payload
-#forged         = SHA1.new(payload, forged_message.size * 8, *state(sha1_mac)).digest
-forged         = SHA1.new(key + message, nil, *state(sha1_mac)).digest
-
-# p "forged_message: #{forged_message}"
-
-# p sha1_mac, forged
-# p forged_message
-# p [forged, verify(key, message, forged)]
-
-#1000.times do |i|
-#  fake_key       = 'A' * i
-#  payload        = ';admin=true'
-#  forged_message = pad(fake_key + message) + payload
-#  forged         = SHA1.new(payload, forged_message.size * 8, *state(sha1_mac)).digest
-#
-#  p [forged, verify(key, message, forged)] if verify(key, message, forged)
-#end
-
+p length_extension_attack(sha1_mac, message, ';admin=true')
 
 # Output:
 # ----------------------------------------------------------
