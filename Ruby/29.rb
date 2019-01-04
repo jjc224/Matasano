@@ -197,73 +197,73 @@ puts "[+] Determined key-size: #{key_size}"
 # [josh@purehacking] [/dev/ttys002] [master ⚡] [~/Projects/Matasano/Ruby]> for i in {1..8}; do ruby 29_other.rb && echo "\n<---------->\n"; done
 #
 # [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
-# [+] Original MAC: 1364043312993936405245046336086713586816082180621
+# [+] Original MAC: 15296300939f889d0eb87f299e4f5917035823bd
 #
-# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon��;admin=true
-# [+] Forged MAC: 1073363108248356387979110315233622829983681128082
-# [+] Determined key-size: 5
-#
-# <---------->
-#
-# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
-# [+] Original MAC: 1318505146926662719511180311242812175145960005453
-#
-# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon��;admin=true
-# [+] Forged MAC: 266351775904381741242407278603150132491016761200
-# [+] Determined key-size: 10
-#
-# <---------->
-#
-# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
-# [+] Original MAC: 169078026203637058668788470453826660471149508345
-#
-# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon��;admin=true
-# [+] Forged MAC: 697720360276698327461582907233875925003212177371
-# [+] Determined key-size: 10
-#
-# <---------->
-#
-# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
-# [+] Original MAC: 785567993982986776412330106129493176274855975041
-#
-# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon��;admin=true
-# [+] Forged MAC: 787283702797490409601020113678676943769892959758
-# [+] Determined key-size: 9
-#
-# <---------->
-#
-# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
-# [+] Original MAC: 942559984779095756508382273323558394715428859998
-#
-# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon��;admin=true
-# [+] Forged MAC: 731051995359260150957930871762487323313531667106
-# [+] Determined key-size: 11
-#
-# <---------->
-#
-# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
-# [+] Original MAC: 729195683821557351624826425434357726432312483412
-#
-# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon��;admin=true
-# [+] Forged MAC: 594947050219617828738518175656568068355363753075
-# [+] Determined key-size: 9
-#
-# <---------->
-#
-# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
-# [+] Original MAC: 543893416812179268425484852169837254949141738709
-#
-# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon��;admin=true
-# [+] Forged MAC: 886779176114416459738572071992209268787069510839
-# [+] Determined key-size: 11
-#
-# <---------->
-#
-# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
-# [+] Original MAC: 1184936309796577519623836230381011893049853497249
-#
-# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon��;admin=true
-# [+] Forged MAC: 1419876567968266581395825392688392695965644691006
+# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon ;admin=true
+# [+] Forged MAC: 85b5a3763b5471d5add3dc97aea1c2de7f3952a7
 # [+] Determined key-size: 7
 #
-# <---------->
+# <------------>
+#
+# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
+# [+] Original MAC: 61023c5e3c0e3d9193f18e042be400ec40a0953e
+#
+# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon¨;admin=true
+# [+] Forged MAC: 3f005111e5daa084041a74b5c70f60240002af3a
+# [+] Determined key-size: 8
+#
+# <------------>
+#
+# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
+# [+] Original MAC: 631a7228435941050cba960b3c659901a6c9180f
+#
+# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon¨;admin=true
+# [+] Forged MAC: 3a98884ca2208555bacb735ef4245f2d90ef3dbf
+# [+] Determined key-size: 8
+#
+# <------------>
+#
+# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
+# [+] Original MAC: 45f0c6816906113318605c869a93d29c82b62abc
+#
+# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon;admin=true
+# [+] Forged MAC: b54f5b7a01be09baeeb2c1c26c096efe364a2bba
+# [+] Determined key-size: 6
+#
+# <------------>
+#
+# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
+# [+] Original MAC: 338a6bc84871785b476488ae31873b8a0314fabe
+#
+# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon;admin=true
+# [+] Forged MAC: 6e1a43768e5399473430080b813e0f349f510359
+# [+] Determined key-size: 5
+#
+# <------------>
+#
+# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
+# [+] Original MAC: eaf840e807dee838dee1bc54ada5f71656554473
+#
+# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon;admin=true
+# [+] Forged MAC: b17080c1302c3de06fa294c2af29fdc4b3b9d878
+# [+] Determined key-size: 5
+#
+# <------------>
+#
+# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
+# [+] Original MAC: df790855ebe7dca879cf32977bec6b9a19830e44
+#
+# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon¸;admin=true
+# [+] Forged MAC: c144a75e7fc8d0f7f723b2a243369254deec791d
+# [+] Determined key-size: 10
+#
+# <------------>
+#
+# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
+# [+] Original MAC: 20a264f7039922ca4252330519f557b275a56c34
+#
+# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon ;admin=true
+# [+] Forged MAC: d0b05795ad15737297d2d955a1d2c1d81f7dbbe
+# [+] Determined key-size: 7
+#
+# <------------>
