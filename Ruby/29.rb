@@ -1,4 +1,4 @@
-# Challenge 29: break a SHA-1 keyed MAC using length extension.
+# Challenge 29: break a SHA-1 keyed MAC using length-extension.
 
 # Secret-prefix SHA-1 MACs are trivially breakable.
 #
@@ -101,17 +101,23 @@ class SHA1
     hh = (h0 << 128) | (h1 << 96) | (h2 << 64) | (h3 << 32) | h4
 
     # Return the hash / message digest as hex:
-    @digest = hh.to_hex
+    @digest = hh
+  end
+
+  def hex_digest
+    @digest.to_hex
   end
 end
 
 class SHA1_MAC < SHA1
+  attr_accessor :key
+
   def initialize(key, message, ml = nil, h0 = 0x67452301, h1 = 0xEFCDAB89, h2 = 0x98BADCFE, h3 = 0x10325476, h4 = 0xC3D2E1F0)
     super(key + message, ml, h0, h1, h2, h3, h4)
   end
 
   def verify(message)
-    @digest == SHA1_MAC.new($key, message).digest
+    @digest == SHA1_MAC.new(KEY, message).digest
   end
 end
 
@@ -126,9 +132,13 @@ def pad(message)
   message += [ml].pack('Q>')
 end
 
+# Now, take the SHA-1 secret-prefix MAC of the message you want to forge -- this is just a SHA-1 hash -- and break it into 32 bit SHA-1 registers (SHA-1 calls them "a", "b", "c", etc.).
 def state(digest)
+  # Translate hexadecimal MAC to integer equivalent if needed (i.e., SHA1_MAC.hex_digest -> SHA1_MAC.digest).
   digest = digest.to_i(16) unless digest.is_a?(Integer)
 
+  # Reverse the final step in SHA-1 to retrieve the internal state for cloning state, ultimately allowing us to suffix a payload.
+  # I.e., this gives us our five 32-bit SHA-1 registers.
   a = (digest >> 128) & 0xffffffff
   b = (digest >> 96)  & 0xffffffff
   c = (digest >> 64)  & 0xffffffff
@@ -138,18 +148,16 @@ def state(digest)
   [a, b, c, d, e]
 end
 
-def verify(key, message, digest)
-  SHA1_MAC.new(key, message).digest == digest
-end
-
-# We will assume up to a 128-bit key (for no real reason other than demonstration).
 def length_extension_attack(mac, message, payload)
+  # We will assume up to a 128-bit key (for no real reason other than demonstration).
   (0..16).each do |key_size|
     forged_message = pad('A' * key_size + message)[key_size..-1] + payload
     sha1_mac       = SHA1_MAC.new('', payload, (key_size + forged_message.size) * 8, *state(mac))
-    forged         = sha1_mac.digest
+    forged_mac     = sha1_mac.digest
   
-    return [forged_message, forged, key_size] if sha1_mac.verify(forged_message)  #verify($key, forged_message, forged)
+    if sha1_mac.verify(forged_message)
+      return [forged_message, forged_mac, key_size]
+    end
   end
 
   raise 'SHA-1 length-extension attack failed.'
@@ -157,16 +165,95 @@ end
 
 # Using this attack, generate a secret-prefix MAC under a secret key (choose a random word from /usr/share/dict/words or something) of the string:
 # "comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon"
-$key    = File.readlines('/usr/share/dict/words').sample[0, 16].chomp  # Ensure the key is up to 128 bits as per this particular demonstration.
+KEY     = File.readlines('/usr/share/dict/words').sample[0, 16].chomp  # Ensure the key is ≤ 128 bits as per this particular demonstration.
 message = 'comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon'
 
-# Now, take the SHA-1 secret-prefix MAC of the message you want to forge -- this is just a SHA-1 hash -- and break it into 32 bit SHA-1 registers (SHA-1 calls them "a", "b", "c", etc.).
-# XXX
 # Forge a variant of this message that ends with ";admin=true".
-sha1_mac = SHA1_MAC.new($key, message).digest
+message_mac = SHA1_MAC.new(KEY, message).digest
+payload     = ';admin=true'
 
-p length_extension_attack(sha1_mac, message, ';admin=true')
+forged_message, forged_mac, key_size = length_extension_attack(message_mac, message, payload)
+raise "Payload injection not entirely successful: #{payload} not in forged message." unless forged_message.include?(';admin=true')
+
+puts "[+] Original message: #{message}"
+puts "[+] Original MAC: #{message_mac.to_hex}"
+puts
+puts "[+] Forged message: #{forged_message}"
+puts "[+] Forged MAC: #{forged_mac.to_hex}"
+puts "[+] Determined key-size: #{key_size}"
 
 # Output:
-# ----------------------------------------------------------
-# [josh@jizzo:~/Projects/Matasano/Ruby on master] ruby 29.rb
+# ---------------------------------------------------------
+# [josh@purehacking] [/dev/ttys002] [master ⚡] [~/Projects/Matasano/Ruby]> for i in {1..8}; do ruby 29_other.rb && echo "\n<---------->\n"; done
+#
+# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
+# [+] Original MAC: 1364043312993936405245046336086713586816082180621
+# 
+# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon��;admin=true
+# [+] Forged MAC: 1073363108248356387979110315233622829983681128082
+# [+] Determined key-size: 5
+# 
+# <---------->
+# 
+# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
+# [+] Original MAC: 1318505146926662719511180311242812175145960005453
+# 
+# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon��;admin=true
+# [+] Forged MAC: 266351775904381741242407278603150132491016761200
+# [+] Determined key-size: 10
+# 
+# <---------->
+# 
+# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
+# [+] Original MAC: 169078026203637058668788470453826660471149508345
+# 
+# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon��;admin=true
+# [+] Forged MAC: 697720360276698327461582907233875925003212177371
+# [+] Determined key-size: 10
+# 
+# <---------->
+# 
+# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
+# [+] Original MAC: 785567993982986776412330106129493176274855975041
+# 
+# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon��;admin=true
+# [+] Forged MAC: 787283702797490409601020113678676943769892959758
+# [+] Determined key-size: 9
+# 
+# <---------->
+# 
+# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
+# [+] Original MAC: 942559984779095756508382273323558394715428859998
+# 
+# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon��;admin=true
+# [+] Forged MAC: 731051995359260150957930871762487323313531667106
+# [+] Determined key-size: 11
+# 
+# <---------->
+# 
+# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
+# [+] Original MAC: 729195683821557351624826425434357726432312483412
+# 
+# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon��;admin=true
+# [+] Forged MAC: 594947050219617828738518175656568068355363753075
+# [+] Determined key-size: 9
+# 
+# <---------->
+# 
+# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
+# [+] Original MAC: 543893416812179268425484852169837254949141738709
+# 
+# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon��;admin=true
+# [+] Forged MAC: 886779176114416459738572071992209268787069510839
+# [+] Determined key-size: 11
+# 
+# <---------->
+# 
+# [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
+# [+] Original MAC: 1184936309796577519623836230381011893049853497249
+# 
+# [+] Forged message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon��;admin=true
+# [+] Forged MAC: 1419876567968266581395825392688392695965644691006
+# [+] Determined key-size: 7
+# 
+# <---------->
