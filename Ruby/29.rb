@@ -1,19 +1,20 @@
 # Challenge 29: break a SHA-1 keyed MAC using length-extension.
 
-# Secret-prefix SHA-1 MACs are trivially breakable.
-#
-# The attack on secret-prefix SHA1 relies on the fact that you can take the ouput of SHA-1 and use it as a new starting point for SHA-1, thus taking an arbitrary SHA-1 hash and "feeding it more data".
-# Since the key precedes the data in secret-prefix, any additional data you feed the SHA-1 hash in this fashion will appear to have been hashed with the secret key.
-#
-# To carry out the attack, you'll need to account for the fact that SHA-1 is "padded" with the bit-length of the message; your forged message will need to include that padding.
-# We call this "glue padding". The final message you actually forge will be:
-#
-# SHA1(key || original-message || glue-padding || new-message)
-#
-# (where the final padding on the whole constructed message is implied)
-#
-# Note that to generate the glue padding, you'll need to know the original bit length of the message; the message itself is known to the attacker, but the secret key isn't, so you'll need to guess at it.
-# This sounds more complicated than it is in practice.
+#  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# | Secret-prefix SHA-1 MACs are trivially breakable.                                                                                                                                                         |
+# |                                                                                                                                                                                                           |
+# | The attack on secret-prefix SHA1 relies on the fact that you can take the ouput of SHA-1 and use it as a new starting point for SHA-1, thus taking an arbitrary SHA-1 hash and "feeding it more data".    |
+# | Since the key precedes the data in secret-prefix, any additional data you feed the SHA-1 hash in this fashion will appear to have been hashed with the secret key.                                        |
+# |                                                                                                                                                                                                           |
+# | To carry out the attack, you'll need to account for the fact that SHA-1 is "padded" with the bit-length of the message; your forged message will need to include that padding.                            |
+# | We call this "glue padding". The final message you actually forge will be:                                                                                                                                |
+# |                                                                                                                                                                                                           |
+# | SHA-1(key || original-message || glue-padding || new-message)                                                                                                                                              |
+# | (Where the final padding on the whole constructed message is implied.)                                                                                                                                    |
+# |                                                                                                                                                                                                           |
+# | Note that to generate the glue padding, you'll need to know the original bit length of the message; the message itself is known to the attacker, but the secret key isn't, so you'll need to guess at it. |
+# | This sounds more complicated than it is in practice.                                                                                                                                                      |
+#  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 require_relative 'matasano_lib/sha1'
 
