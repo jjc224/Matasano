@@ -209,7 +209,7 @@ puts "[+] Forged MAC: #{forged_mac.to_hex}"
 puts "[+] Determined key-size: #{key_size}"
 
 # Output:
-# ---------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------------------------------
 # [josh@purehacking] [/dev/ttys002] [master ⚡] [~/Projects/Matasano/Ruby]> for i in {1..8}; do ruby 29_other.rb && echo "\n<---------->\n"; done
 #
 # [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
