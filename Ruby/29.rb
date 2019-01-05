@@ -117,6 +117,24 @@ class SHA1_MAC < SHA1
   end
 end
 
+class Oracle
+  def initialize
+    # Using this attack, generate a secret-prefix MAC under a secret key (choose a random word from /usr/share/dict/words or something) of the string:
+    # "comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon"
+    #
+    # ^ The message passed into the oracle will be the string above. ^
+    @key = File.readlines('/usr/share/dict/words').sample[0, 32].chomp  # Ensure the key is ≤ 256 bits as per this particular demonstration.
+  end
+
+  def generate_digest(message)
+    SHA1_MAC.new(@key, message).digest
+  end
+
+  def verify(message, digest)
+    SHA1_MAC::verify(@key, message, digest)
+  end
+end
+
 # To implement the attack, first write the function that computes the MD padding of an arbitrary message and verify that you're generating the same padding that your SHA-1 implementation is using.
 # This should take you 5-10 minutes.
 #   -> (More like 10 seconds rofl.)
@@ -147,7 +165,7 @@ end
 # Performs a length-extension attack on a SHA-1 MAC with a secret-key.
 # Forges a variant of the given message such that it is suffixed with payload (';admin=true').
 # Returns the newly-constructed (forged) message and its respective, valid SHA-1 MAC digest.
-def length_extension_attack(mac, message, payload)
+def length_extension_attack(mac, message, payload, oracle)
   # We will assume a 256-bit key (for no real reason other than a more realistic demonstration).
   (0..32).each do |key_size|
     # The forged message is constructed as SHA-1(key || original-message || glue-padding || new-message).
@@ -160,7 +178,7 @@ def length_extension_attack(mac, message, payload)
     sha1_mac   = SHA1_MAC.new('', payload, (key_size + forged_message.size) * 8, *registers)
     forged_mac = sha1_mac.digest
 
-    if SHA1_MAC::verify(KEY, forged_message, forged_mac)
+    if oracle.verify(forged_message, forged_mac)
       return [forged_message, forged_mac, key_size]
     end
   end
@@ -168,21 +186,19 @@ def length_extension_attack(mac, message, payload)
   raise 'SHA-1 length-extension attack failed.'
 end
 
-# Using this attack, generate a secret-prefix MAC under a secret key (choose a random word from /usr/share/dict/words or something) of the string:
-# "comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon"
-KEY     = File.readlines('/usr/share/dict/words').sample[0, 32].chomp  # Ensure the key is ≤ 256 bits as per this particular demonstration.
-message = 'comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon'
-
 # Forge a variant of this message that ends with ";admin=true".
-message_mac = SHA1_MAC.new(KEY, message).digest
+oracle      = Oracle.new
+message     = 'comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon'
+message_mac = oracle.generate_digest(message)
 payload     = ';admin=true'
 
-forged_message, forged_mac, key_size = length_extension_attack(message_mac, message, payload)
+forged_message, forged_mac, key_size = length_extension_attack(message_mac, message, payload, oracle)
 
 # Assert that the forged message does include ';admin=true' as a substring (can also check -payload.size bytes back since it is suffixed).
 # This means we've successfully added a flag with which we would have privilege escalation from a guest and/or typical, low-privileged user.
+# (Note we have already verified the forged MAC.)
 unless forged_message.include?(';admin=true')
-  raise "Payload injection not entirely successful: '#{payload}' not in forged message."
+  raise "Payload injection unsuccessful: '#{payload}' not in forged message despite a verified forged MAC."
 end
 
 puts "[+] Original message: #{message}"
