@@ -118,18 +118,18 @@ class SHA1_MAC < SHA1
 end
 
 class Oracle
+  # Using this attack, generate a secret-prefix MAC under a secret key (choose a random word from /usr/share/dict/words or something) of the string:
+  # "comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon"
   def initialize
-    # Using this attack, generate a secret-prefix MAC under a secret key (choose a random word from /usr/share/dict/words or something) of the string:
-    # "comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon"
-    #
-    # ^ The message passed into the oracle will be the string above. ^
-    @key = File.readlines('/usr/share/dict/words').sample[0, 32].chomp  # Ensure the key is ≤ 256 bits as per this particular demonstration.
+    @key = File.readlines('/usr/share/dict/words').sample[0, 32].chomp  # Ensure the key is ≤ 256 bits (32 bytes) as per this particular demonstration.
   end
 
+  # Returns a new SHA-1 MAC digest with a random key.
   def generate_digest(message)
     SHA1_MAC.new(@key, message).digest
   end
 
+  # Performs MAC verification given a message and its digest under a secret key only known by the oracle.
   def verify(message, digest)
     SHA1_MAC::verify(@key, message, digest)
   end
