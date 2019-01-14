@@ -149,8 +149,8 @@ def state(digest)
 end
 
 def length_extension_attack(mac, message, payload)
-  # We will assume up to a 128-bit key (for no real reason other than demonstration).
-  (0..16).each do |key_size|
+  # We will assume up to a 256-bit key (for no real reason other than demonstration).
+  (0..32).each do |key_size|
     forged_message = pad('A' * key_size + message)[key_size..-1] + payload
     sha1_mac       = SHA1_MAC.new('', payload, (key_size + forged_message.size) * 8, *state(mac))
     forged_mac     = sha1_mac.digest
@@ -165,7 +165,7 @@ end
 
 # Using this attack, generate a secret-prefix MAC under a secret key (choose a random word from /usr/share/dict/words or something) of the string:
 # "comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon"
-KEY     = File.readlines('/usr/share/dict/words').sample[0, 16].chomp  # Ensure the key is ≤ 128 bits as per this particular demonstration.
+KEY     = File.readlines('/usr/share/dict/words').sample[0, 32].chomp  # Ensure the key is ≤ 256 bits as per this particular demonstration.
 message = 'comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon'
 
 # Forge a variant of this message that ends with ";admin=true".
@@ -183,7 +183,7 @@ puts "[+] Forged MAC: #{forged_mac.to_hex}"
 puts "[+] Determined key-size: #{key_size}"
 
 # Output:
-# ---------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------------------------------
 # [josh@purehacking] [/dev/ttys002] [master ⚡] [~/Projects/Matasano/Ruby]> for i in {1..8}; do ruby 29_other.rb && echo "\n<---------->\n"; done
 #
 # [+] Original message: comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon
