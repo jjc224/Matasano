@@ -15,9 +15,7 @@
 # Note that to generate the glue padding, you'll need to know the original bit length of the message; the message itself is known to the attacker, but the secret key isn't, so you'll need to guess at it.
 # This sounds more complicated than it is in practice.
 
-require_relative 'matasano_lib/sha1'
-
-include MatasanoLib
+require_relative 'matasano_lib/monkey_patch'
 
 # Note 1: All variables are unsigned 32-bit quantities and wrap modulo 232 when calculating, except for
 #         ml, the message length, which is a 64-bit quantity, and
