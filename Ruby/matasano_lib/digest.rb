@@ -1,5 +1,4 @@
-require_relative 'sha1'
-require_relative 'md4'
+require_relative 'monkey_patch'
 
 module MatasanoLib
   module Digest
@@ -266,7 +265,7 @@ module MatasanoLib
     # -- Auxiliary -- #
 
     module Attack
-      extend self
+      module_function
 
       # Performs a length-extension attack on a MAC with a secret-key.
       # Forges a variant of the given message such that it is suffixed with payload (';admin=true').
