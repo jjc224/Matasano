@@ -26,7 +26,8 @@ class Integer
   end
 
   def left_rotate(shift, n = 32)
-    ((self << shift) & ((1 << n) - 1)) | (self >> (n - shift))
+    mask = (1 << n) - 1
+    ((self << shift) & mask) | ((self & mask) >> (n - shift))
   end
 end
 
