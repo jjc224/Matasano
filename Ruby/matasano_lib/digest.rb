@@ -1,5 +1,9 @@
 require_relative 'monkey_patch'
 
+# FIXME: SHA1 is not hashing correctly for some inputs (e.g. 'blah').
+#        * Check MD4 too.
+#        * Patch original SHA1/MD4 length-extension challenge code.
+
 module MatasanoLib
   module Digest
     # -- SHA-1 -- #
