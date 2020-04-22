@@ -70,8 +70,8 @@ def decrypt_keystream(ciphertexts)
   keystream = ''
 
   ciphertexts.map.with_index do |c, i|
-    candidate_key = decrypt_next_byte(ciphertexts, i)     # Do '(c.max_by(&:size).size).times' if necessary (code seems to be highly robust and derives the same, correct key for every instance.
-    keystream << candidate_key unless candidate_key.nil?  # In which case, you will want to append the most common key in from array of candidate keys to keystream instead.
+    candidate_key = decrypt_next_byte(ciphertexts, i)     # Do '(c.max_by(&:size).size).times' if necessary (code seems to be highly robust and derives the same, correct key for every instance).
+    keystream << candidate_key unless candidate_key.nil?  # In which case, you will want to append the most common key in from the array of candidate keys to keystream instead.
   end
 
   keystream

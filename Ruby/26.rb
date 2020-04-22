@@ -2,7 +2,7 @@
 
 # Since this is really just identical to CBC bit-flipping, aside that the mathematics for crypting in CTR mode differ and thus I need to exemplify this previous attack on a CTR-encrypted cookie.
 #
-# I first made sure to realize that while CTR is a stream cipher mode, it does so by using block cipher mode with a keystream to neglect the need for padding.
+# I first made sure to realize that while CTR is a stream cipher mode, it does so by using block cipher mode ECB with a keystream to neglect the need for padding.
 # This allowed me to conjure up the same sort of method of breaking this:
 #   1. Break into 128-bit blocks.
 #   2. Flip the bytes in the right blocks (on a parallel, block boundary).
@@ -33,8 +33,8 @@ end
 
 # Flip the bytes at the same position on C/P/K blocks, so they're XOR'd together on a block boundary to produce the correct values.
 #
-# You need to take the known evil plain and evil bytes C' and P' (which you do know; you facilitated in their creation).
-# You can calculate the key-stream byte K = P' ^ C'. Then you know C = P ^ K (e.g. ';' ^ K in first instance).
+# You need to take the known evil plaintext and ciphertext bytes, P' and C', which you do know (you facilitated in their creation).
+# You can calculate the key-stream byte K = P' ^ C'. Then you know C = P ^ K (e.g., ';' ^ K in the first instance).
 #
 # C = P ^ K
 #   = P ^ (P' ^ C')

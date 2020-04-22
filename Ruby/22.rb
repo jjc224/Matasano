@@ -16,9 +16,9 @@ require_relative 'matasano_lib/mt19937'
 # An insecure implementation of MT19937.
 # Suppose it is a blackbox function (it's a greybox function ;~)).
 def blackbox_mt19937
-  sleep(rand(40..1000))
+  sleep(rand(4..7))
   mt = MatasanoLib::MT19937.new(Time.now.to_i)
-  sleep(rand(40..1000))
+  sleep(rand(4..7))
 
   mt.extract_number  # Already returns a 32-bit int masked by 0xffffffff ((1 << $w) - 1).
 end
@@ -45,3 +45,4 @@ puts "Seed: #{crack_blackbox_mt19937.to_s}"  # This would output 'Seed: nil' on 
 # ruby 22.rb  0.16s user 0.00s system 0% cpu 18:50.16 total
 #
 # NOTE: speed is solely due to the random interval of time runtime is put to sleep.
+#       sleep(rand(40..1000)) was previously used in blackbox_mt19937().

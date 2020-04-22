@@ -19,8 +19,7 @@ msg = 'A' * (16 - 1)
   stripped = pkcs7_validate_and_strip(input)
 
   # Such an error will result in the program crashing and an exit code of 1 being returned.
-  raise "Invalid padding detected (%s)." % [padding.inspect] unless MatasanoLib::PKCS7.valid(msg + padding)    # pkcs7_validate_and_strip() already computes this: this is for logic's sake.
-
+  raise "Invalid padding detected (%s)." % [padding.inspect] unless MatasanoLib::PKCS7.valid(msg + padding)  # pkcs7_validate_and_strip() already computes this: this is for logic's sake.
   msg = msg[0...-1]
 end
 

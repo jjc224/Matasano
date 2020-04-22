@@ -108,17 +108,17 @@ end
 
 # Return the last byte of last block of plaintext (P2) and the last byte of the first block of ciphertext (C1).
 # Prepends the decrypted P2 and C1 bytes into 'known_p2' and 'known_evil_c1', respectively.
-def decrypt_last_byte(enc, iv, known_p2, known_evil_c1)
+def decrypt_last_byte(enc, iv, known_p2, known_evil_c1, pads = nil)
   # Padding table.
   # This seems like a more generic choice. Regardless of the values, we can index the correct pad byte using 'pos'.
   # Since this is PKCS#7 padding, we would simply do 'pads = *(0x01..0x10)'. However this solution allows for any padding scheme with minor modifications.
-  # Moreover, we really could just use 'pos' for most calculations. Howver, there are benefits to this generalization.
-  pads = [
-           0x01, 0x02, 0x03, 0x04,
-           0x05, 0x06, 0x07, 0x08,
-           0x09, 0x0A, 0x0B, 0x0C,
-           0x0D, 0x0E, 0x0F, 0x10
-         ]
+  # Moreover, we really could just use 'pos' for most calculations. However, there are benefits to this generalization.
+  pads ||= [
+             0x01, 0x02, 0x03, 0x04,
+             0x05, 0x06, 0x07, 0x08,
+             0x09, 0x0A, 0x0B, 0x0C,
+             0x0D, 0x0E, 0x0F, 0x10
+           ]
 
   bytes_found = known_p2.size           # The amount of bytes discovered are the amount of bytes in the solution (P2) thus far (|P2| = |C'|).
   pos         = known_evil_c1.size + 1  # Position of next bytes of C1 and C' blocks.
@@ -146,11 +146,11 @@ def decrypt_last_byte(enc, iv, known_p2, known_evil_c1)
       c1_byte      = c1[-pos]
       evil_c1_byte = evil_c1[-pos]
 
-      p2 = pad_byte ^ c1_byte ^ evil_c1_byte  # P2 = P'2 ^ C1 ^ C'
+      p2_byte = pad_byte ^ c1_byte ^ evil_c1_byte  # P2 = P'2 ^ C1 ^ C'
 
       # Return the last byte of the known_p2 block (P2) and payload ciphertext block (C').
       # Prepended in reverse due to bottom-up nature of this algorithm.
-      return [p2] + known_p2, [evil_c1_byte] + known_evil_c1
+      return [p2_byte] + known_p2, [evil_c1_byte] + known_evil_c1
     end
   end
 end
