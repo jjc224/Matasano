@@ -5,8 +5,14 @@ module MatasanoLib
     class << self
       # Operates XOR on two hex strings, and returns the result in hex format.
       def hex(a, b)
-        raise "Unequal buffers passed." if a.length != b.length
+        raise "Unequal buffers passed." if a.size != b.size
         (a.hex ^ b.hex).to_s(16)
+      end
+
+      # Return the number of set bits (the number of differing bits, as per XOR).
+      def hamming_distance(a, b)
+        raise "Unequal buffers passed." if a.length != b.length
+        a.bytes.zip(b.bytes).map { |a, b| (a ^ b).to_s(2) }.join.count('1')
       end
 
       # Can be used for either encryption or decryption (as per the way XOR operates).
