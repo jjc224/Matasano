@@ -16,18 +16,13 @@ require_relative 'matasano_lib/url'
 require_relative 'matasano_lib/xor'
 require_relative 'matasano_lib/monkey_patch'
 
+# Return the number of set bits (the number of differing bits, as per XOR).
 def hamming_distance(a, b)
-  raise "Unequal buffers passed." if a.length != b.length
-  ret = String.new
-
-  a.bytes.each_with_index do |a_byte, i|
-    ret << (a_byte ^ b.bytes[i]).to_s(2)
-  end
-
-  ret.count('1')  # Return the number of set bits (the number of differing bits, as per XOR).
+  raise "Unequal buffers passed." if a.size != b.size
+  a.bytes.zip(b.bytes).map { |a, b| (a ^ b).to_s(2) }.join.count('1')
 end
 
-enc      = Base64.decode64(open('http://cryptopals.com/static/challenge-data/6.txt') { |f| f.read }.strip!)
+enc      = Base64.decode64(URI.open('http://cryptopals.com/static/challenge-data/6.txt') { |f| f.read }.strip!)
 hamdists = Hash.new
 
 # Step 3 and 4.
