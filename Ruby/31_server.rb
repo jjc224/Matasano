@@ -40,7 +40,7 @@ class Oracle
   def insecure_compare(signature)
     # Break into two chunks because we're dealing with hexadecimal: two chars equals one byte.
     @hmac.chunk(2).zip(signature.chunk(2)).each do |c1, c2|
-      return false if c1 != c2  # Exit early is bytes match (vulnerability part 1/2).
+      return false if c1 != c2  # Exit early if bytes match (vulnerability part 1/2).
       sleep(0.005)              # Artificial timing leak (vulnerability part 2/2).
     end
 
