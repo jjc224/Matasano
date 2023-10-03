@@ -8,7 +8,7 @@ module MatasanoLib
     def initialize(p = DEFAULT_P, g = DEFAULT_G)
       @p = p
       @g = g
-      @a = rand(1...p)
+      @a = rand(1...p)  # TODO: MT-based rand() is not cryptographically secure. Replace with SecureRandom or similar?
 
       @public_key = mod_exp(@g, @a, @p)
     end
