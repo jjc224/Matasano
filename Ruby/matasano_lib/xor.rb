@@ -37,17 +37,17 @@ module MatasanoLib
         regexpr = Regexp.new(regexpr.source, Regexp::IGNORECASE)
 
         (0..255).each do |i|
-          attempt_key = i.chr
-          xor_key     = (attempt_key * enc.length).to_hex  # Repeat single-key to match size of ciphertext for XOR'ing.
-          ret_hex     = hex(enc.to_hex, xor_key)
-          plaintext   = ret_hex.unhex
-          score       = plaintext.scan(regexpr).size / plaintext.length.to_f  # Returns the number of matches and normalises the result.
+          key_char  = i.chr
+          xor_key   = (key_char * enc.length).to_hex  # Repeat single-key to match size of ciphertext for XOR'ing.
+          dec_hex   = hex(enc.to_hex, xor_key)
+          plaintext = dec_hex.unhex
+          score     = plaintext.scan(regexpr).size / plaintext.length.to_f  # Returns the number of matches and normalises the result.
 
           # Update solution data to match more promising solution (higher score).
           if score > solution_data[:score]
             solution_data[:score]      = score
-            solution_data[:key]        = attempt_key
-            solution_data[:ciphertext] = ret_hex
+            solution_data[:key]        = key_char
+            solution_data[:ciphertext] = enc.to_hex
             solution_data[:plaintext]  = plaintext
           end
         end
