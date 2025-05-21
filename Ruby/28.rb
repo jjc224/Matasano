@@ -10,12 +10,6 @@
 
 require_relative 'matasano_lib/monkey_patch'
 
-# 32-bit cyclic left-rotation.
-# (Generic version added to monkey patch.)
-def left_rotate(value, shift)
-  ((value << shift) & 0xffffffff) | (value >> (32 - shift))
-end
-
 # Note 1: All variables are unsigned 32-bit quantities and wrap modulo 232 when calculating, except for
 #         ml, the message length, which is a 64-bit quantity, and
 #         hh, the message digest, which is a 160-bit quantity.
@@ -23,18 +17,23 @@ end
 # Note 2: All constants in this pseudo-code are in big-endian.
 #         Within each word, the most significant byte is stored in the left-most byte position.
 class SHA1
-  attr_reader :digest
+  BLOCKSIZE = 64
 
-  def initialize(message)
-    # Initialize variables:
-    @h0 = 0x67452301
-    @h1 = 0xEFCDAB89
-    @h2 = 0x98BADCFE
-    @h3 = 0x10325476
-    @h4 = 0xC3D2E1F0
+  attr_reader :digest, :hex_digest
 
+  # 32-bit cyclic left-rotation.
+  # (Generic version added to monkey patch.)
+  private def left_rotate(value, shift)
+    (value << shift & 0xffffffff) | value >> (32 - shift)
+  end
+
+  # Initialize variables:
+  #
+  # Modify your SHA-1 implementation so that callers can pass in new values for "a", "b", "c", etc. (they normally start at magic numbers).
+  # With the registers "fixated", hash the additional data you want to forge.
+  def initialize(message, ml = nil, h0 = 0x67452301, h1 = 0xEFCDAB89, h2 = 0x98BADCFE, h3 = 0x10325476, h4 = 0xC3D2E1F0)
     # Message length in bits (always a multiple of the number of bits in a character).
-    @ml = message.size * 8
+    ml ||= message.size * 8
 
     # Pre-processing:
     # ---------------
@@ -43,15 +42,15 @@ class SHA1
 
     # Append 0 ≤ k < 512 bits '0', such that the resulting message length in bits is congruent to −64 ≡ 448 (mod 512).
     # Since 512 is a power of two (2**9), it is much faster to perform modulo via bitwise (i & (n - 1)) than via the modulo operator (%).
-    message += "\0" * ((448 / 8 - message.size) & ((512 - 1) / 8))
+    message += "\0" * (56 - (message.size & 63) & 63)  # 56 = 448 / 8, and 63 = 512 / 8 - 1. (Readable equivalent for the latter would be '% 64'.)
 
-    # Append ml, the original message length, as a 64-bit big-endian integer. Thus, the total length is a multiple of 512 bits.
-    message += [@ml].pack('Q>')  # Unsigned 64-bit integer (big-endian).
+    # Append ml, the original message length, as an (unsigned) 64-bit big-endian integer. Thus, the total length is a multiple of 512 bits.
+    message += [ml].pack('Q>')
 
     # Process the message in successive 512-bit chunks:
-    message.chunk(64).each do |chunk|
+    message.bytes.each_slice(BLOCKSIZE).each do |chunk|
       # For each chunk, break chunk into sixteen 32-bit big-endian words w[i], 0 ≤ i ≤ 15.
-      w = chunk.chunk(64 / 16).map { |word| word.unpack('L>')[0] }
+      w = chunk.pack('C*').unpack('N16')
 
       # Extend the sixteen 32-bit w into eighty 32-bit w:
       (16..79).each do |i|
@@ -59,11 +58,11 @@ class SHA1
       end
 
       # Initialize hash value for this chunk:
-      a = @h0
-      b = @h1
-      c = @h2
-      d = @h3
-      e = @h4
+      a = h0
+      b = h1
+      c = h2
+      d = h3
+      e = h4
 
       # Main loop:
       (0..79).each do |i|
@@ -90,38 +89,66 @@ class SHA1
       end
 
       # Add this chunk's hash to result so far:
-      @h0 = (@h0 + a) & 0xffffffff
-      @h1 = (@h1 + b) & 0xffffffff
-      @h2 = (@h2 + c) & 0xffffffff
-      @h3 = (@h3 + d) & 0xffffffff
-      @h4 = (@h4 + e) & 0xffffffff
+      h0 = (h0 + a) & 0xffffffff
+      h1 = (h1 + b) & 0xffffffff
+      h2 = (h2 + c) & 0xffffffff
+      h3 = (h3 + d) & 0xffffffff
+      h4 = (h4 + e) & 0xffffffff
     end
 
     # Produce the final hash value (big-endian) as a 160-bit number:
-    hh = (@h0 << 128) | (@h1 << 96) | (@h2 << 64) | (@h3 << 32) | @h4
+    # Return the hash / message digest as raw bytes:
+    @digest     = [h0, h1, h2, h3, h4].pack('N5')  # 32-bit unsigned, big endian.
+    @hex_digest = @digest.to_hex
 
-    # Return the hash / message digest as hex:
-    @digest = hh.to_hex
+    # Alternative/old method:
+    # hh = (h0 << 128) | (h1 << 96) | (h2 << 64) | (h3 << 32) | h4
+    # @digest = [hh.to_s(16).rjust(40, '0')].pack('H*')
+  end
+
+  def self.digest(message)
+    new(message).digest
+  end
+
+  def self.hex_digest(message)
+    new(message).hex_digest
   end
 end
 
-class SHA1_MAC < SHA1
-  def initialize(key, message)
-    super(key + message)
+class SHA1_MAC
+  attr_reader :digest, :hex_digest
+
+  def initialize(key, message, ml = nil, h0 = 0x67452301, h1 = 0xEFCDAB89, h2 = 0x98BADCFE, h3 = 0x10325476, h4 = 0xC3D2E1F0)
+    sha1 = SHA1.new(key + message, ml, h0, h1, h2, h3, h4)
+
+    @digest     = sha1.digest
+    @hex_digest = sha1.hex_digest
+  end
+
+  def self.digest(key, message)
+    new(key, message).digest
+  end
+
+  def self.hex_digest(key, message)
+    new(key, message).hex_digest
   end
 end
 
-p SHA1.new('The quick brown fox jumps over the lazy dog').digest
-p SHA1.new('The quick brown fox jumps over the lazy cog').digest
-p SHA1.new('').digest
+puts SHA1::hex_digest('The quick brown fox jumps over the lazy dog')
+puts SHA1::hex_digest('The quick brown fox jumps over the lazy cog')
+puts SHA1::hex_digest('')
+puts SHA1::hex_digest('blah')
 puts
-p SHA1_MAC.new('Some key.', 'The quick brown fox jumps over the lazy dog').digest
+puts SHA1_MAC::hex_digest('Some key.', 'The quick brown fox jumps over the lazy dog')
+puts SHA1_MAC::hex_digest('Some key.', 'blah')
 
 # Output:
 # ----------------------------------------------------------
 # [josh@jizzo:~/Projects/Matasano/Ruby on master] ruby 28.rb
-# "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12"
-# "de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3"
-# "da39a3ee5e6b4b0d3255bfef95601890afd80709"
-#
-# "f88ef13fb78b506e9f373d1023571070564b422d"
+# 2fd4e1c67a2d28fced849ee1bb76e7391b93eb12
+# de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3
+# da39a3ee5e6b4b0d3255bfef95601890afd80709
+# 5bf1fd927dfb8679496a2e6cf00cbe50c1c87145
+# 
+# 88ef13fb78b506e9f373d1023571070564b422d
+# 10f2518e886875283ed03eb16d13ef6aecde988

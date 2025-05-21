@@ -1,9 +1,5 @@
 require_relative 'monkey_patch'
 
-# FIXME: SHA1 is not hashing correctly for some inputs (e.g. 'blah').
-#        * Check MD4 too.
-#        * Patch original SHA1/MD4 length-extension challenge code.
-
 module MatasanoLib
   module Digest
     # -- SHA-1 -- #
@@ -15,7 +11,15 @@ module MatasanoLib
     # Note 2: All constants in this pseudo-code are in big-endian.
     #         Within each word, the most significant byte is stored in the left-most byte position.
     class SHA1
-      attr_reader :digest
+      BLOCKSIZE = 64
+
+      attr_reader :digest, :hex_digest
+
+      # 32-bit cyclic left-rotation.
+      # (Generic version added to monkey patch.)
+      private def left_rotate(value, shift)
+        (value << shift & 0xffffffff) | value >> (32 - shift)
+      end
 
       # Initialize variables:
       #
@@ -32,19 +36,19 @@ module MatasanoLib
 
         # Append 0 ≤ k < 512 bits '0', such that the resulting message length in bits is congruent to −64 ≡ 448 (mod 512).
         # Since 512 is a power of two (2**9), it is much faster to perform modulo via bitwise (i & (n - 1)) than via the modulo operator (%).
-        message += "\0" * ((448 / 8 - message.size) & ((512 - 1) / 8))
+        message += "\0" * (56 - (message.size & 63) & 63)  # 56 = 448 / 8, and 63 = 512 / 8 - 1. (Readable equivalent for the latter would be '% 64'.)
 
-        # Append ml, the original message length, as a 64-bit big-endian integer. Thus, the total length is a multiple of 512 bits.
-        message += [ml].pack('Q>')  # Unsigned 64-bit integer (big-endian).
+        # Append ml, the original message length, as an (unsigned) 64-bit big-endian integer. Thus, the total length is a multiple of 512 bits.
+        message += [ml].pack('Q>')
 
         # Process the message in successive 512-bit chunks:
-        message.chunk(64).each do |chunk|
+        message.bytes.each_slice(BLOCKSIZE).each do |chunk|
           # For each chunk, break chunk into sixteen 32-bit big-endian words w[i], 0 ≤ i ≤ 15.
-          w = chunk.chunk(64 / 16).map { |word| word.unpack('L>')[0] }
+          w = chunk.pack('C*').unpack('N16')
 
           # Extend the sixteen 32-bit w into eighty 32-bit w:
           (16..79).each do |i|
-            w[i] = (w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16]).left_rotate(1)
+            w[i] = left_rotate(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1)
           end
 
           # Initialize hash value for this chunk:
@@ -70,10 +74,10 @@ module MatasanoLib
               k = 0xCA62C1D6
             end
 
-            temp = a.left_rotate(5) + f + e + k + w[i] & 0xffffffff
+            temp = left_rotate(a, 5) + f + e + k + w[i] & 0xffffffff
             e    = d
             d    = c
-            c    = b.left_rotate(30)
+            c    = left_rotate(b, 30)
             b    = a
             a    = temp
           end
@@ -87,16 +91,24 @@ module MatasanoLib
         end
 
         # Produce the final hash value (big-endian) as a 160-bit number:
-        hh = (h0 << 128) | (h1 << 96) | (h2 << 64) | (h3 << 32) | h4
+        # Return the hash / message digest as raw bytes:
+        @digest     = [h0, h1, h2, h3, h4].pack('N5')  # 32-bit unsigned, big endian.
+        @hex_digest = @digest.to_hex
 
-        # Return the hash / message digest as hex:
-        @digest = hh
+        # Alternative/old method:
+        # hh = (h0 << 128) | (h1 << 96) | (h2 << 64) | (h3 << 32) | h4
+        # @digest = [hh.to_s(16).rjust(40, '0')].pack('H*')
       end
 
-      def hex_digest
-        @digest.to_hex
+      def self.digest(message)
+        new(message).digest
       end
 
+      def self.hex_digest(message)
+        new(message).hex_digest
+      end
+
+      # TODO: Deciding whether to keep or delete this (ties in with other TODO comments above). Not sure this will ever be reused.
       # To implement the attack, first write the function that computes the MD padding of an arbitrary message and verify that you're generating the same padding that your SHA-1 implementation is using.
       # This should take you 5-10 minutes.
       #   -> (More like 10 seconds rofl.)
@@ -104,24 +116,18 @@ module MatasanoLib
         ml = message.size * 8
 
         message += 0x80.chr
-        message += "\0" * ((448 / 8 - message.size) & ((512 - 1) / 8))
+        message += "\0" * (56 - (message.size & 63) & 63)  # 56 = 448 / 8, and 63 = 512 / 8 - 1. (Readable equivalent for the latter would be '% 64'.)
         message += [ml].pack('Q>')
       end
 
-      # Now, take the SHA-1 secret-prefix MAC of the message you want to forge -- this is just a SHA-1 hash -- and break it into 32 bit SHA-1 registers (SHA-1 calls them "a", "b", "c", etc.).
-      def self.state(digest)
-        # Translate hexadecimal MAC to integer equivalent if needed (i.e., SHA1_MAC.hex_digest -> SHA1_MAC.digest).
-        digest = digest.to_i(16) unless digest.is_a?(Integer)
+      # Now, take the SHA-1 secret-prefix MAC of the message you want to forge -- this is just a SHA-1 hash -- and break it into 32 bit SHA-1 registers (SHA-1 calls them 'a', 'b', 'c', etc.).
+      def self.extract_final_state(digest)
+        # Check if a hex digest is passed instead and decode it (i.e., SHA1_MAC.hex_digest -> SHA1_MAC.digest).
+        digest = digest.unhex if digest.is_a?(String) && digest.size == 40
 
         # Reverse the final step in SHA-1 to retrieve the internal state for cloning state, ultimately allowing us to suffix a payload.
-        # I.e., this gives us our five 32-bit SHA-1 registers.
-        a = (digest >> 128) & 0xffffffff
-        b = (digest >> 96)  & 0xffffffff
-        c = (digest >> 64)  & 0xffffffff
-        d = (digest >> 32)  & 0xffffffff
-        e = digest          & 0xffffffff
-
-        [a, b, c, d, e]
+        # I.e., recover the five 32-bit SHA-1 registers.
+        digest = digest.unpack('N5')  # => [h0, h1, h2, h3, h4]
       end
 
       def self.length_extension_attack(mac, message, payload, oracle)
@@ -129,23 +135,80 @@ module MatasanoLib
       end
     end
 
-    class SHA1_MAC < SHA1
-      attr_accessor :key
+    # SHA-1 keyed MAC (susceptible to length-extension attacks).
+    class SHA1_MAC
+      attr_reader :digest, :hex_digest
 
       def initialize(key, message, ml = nil, h0 = 0x67452301, h1 = 0xEFCDAB89, h2 = 0x98BADCFE, h3 = 0x10325476, h4 = 0xC3D2E1F0)
-        super(key + message, ml, h0, h1, h2, h3, h4)
+        sha1 = SHA1.new(key + message, ml, h0, h1, h2, h3, h4)
+
+        @digest     = sha1.digest
+        @hex_digest = sha1.hex_digest
+      end
+
+      def self.digest(key, message)
+        new(key, message).digest
+      end
+
+      def self.hex_digest(key, message)
+        new(key, message).hex_digest
       end
 
       def self.verify(key, message, digest)
-        SHA1_MAC.new(key, message).digest == digest
+        new(key, message).digest == digest
       end
-    end  
+    end
+
+    # SHA-1 HMAC (not susceptible to length-extension but used for challenge #31 for artificial timing leak).
+    class SHA1_HMAC
+      attr_reader :digest, :hex_digest
+
+      BLOCKSIZE = 64
+
+      def initialize(key, message)
+        # Per RFC 2104 -- https://en.wikipedia.org/wiki/HMAC
+        #   HMAC(K, m) = H((K' ^ opad) || H((K' ^ ipad) || m)) such that 
+        #   K' = H(K) if K > blocksize; else, K
+
+        key = SHA1.new(key).digest if key.size > BLOCKSIZE
+        key = key.ljust(BLOCKSIZE, "\0")  # We must pad to 64 bytes either way (whether key is hashed to 20 bytes or plaintext/unchanged).
+
+        o_key_pad = key.bytes.map { |k| (k ^ 0x5c) }.pack('C*')
+        i_key_pad = key.bytes.map { |k| (k ^ 0x36) }.pack('C*')
+
+        sha1_hmac = SHA1.new(o_key_pad + SHA1.digest(i_key_pad + message))  # HMAC(K, m)
+
+        @digest     = sha1_hmac.digest
+        @hex_digest = sha1_hmac.hex_digest
+      end
+
+      def self.digest(key, message)
+        new(key, message).digest
+      end
+
+      def self.hex_digest(key, message)
+        new(key, message).hex_digest
+      end
+
+      # Not used for challenges but could be useful for testing.
+      def self.verify(key, message, digest)
+        new(key, message).digest == digest
+      end
+    end
 
 
     # -- MD4 -- #
 
     class MD4
-      attr_reader :digest
+      BLOCKSIZE = 64
+
+      attr_reader :digest, :hex_digest
+
+      # 32-bit cyclic left-rotation.
+      # (Generic version added to monkey patch.)
+      private def left_rotate(value, shift)
+        (value << shift & 0xffffffff) | value >> (32 - shift)
+      end
 
       def initialize(message, ml = nil, h0 = 0x67452301, h1 = 0xEFCDAB89, h2 = 0x98BADCFE, h3 = 0x10325476)
         f = proc { |x, y, z| x & y | ~x & z }
@@ -160,15 +223,15 @@ module MatasanoLib
 
         # Append 0 ≤ k < 512 bits '0', such that the resulting message length in bits is congruent to −64 ≡ 448 (mod 512).
         # Since 512 is a power of two (2**9), it is much faster to perform modulo via bitwise (i & (n - 1)) than via the modulo operator (%).
-        message += "\0" * ((448 / 8 - message.size) & ((512 - 1) / 8))
+        message += "\0" * (56 - (message.size & 63) & 63)  # 56 = 448 / 8, and 63 = 512 / 8 - 1. (Readable equivalent for the latter would be '% 64'.)
 
-        # Append ml, the original message length, as a 64-bit little-endian integer. Thus, the total length is a multiple of 512 bits.
-        message += [ml].pack('Q<')  # Unsigned 64-bit integer (little-endian).
+        # Append ml, the original message length, as an (unsigned) 64-bit little-endian integer. Thus, the total length is a multiple of 512 bits.
+        message += [ml].pack('Q<')
 
         # Process the message in successive 512-bit chunks:
-        message.chunk(64).each do |chunk|
+        message.bytes.each_slice(BLOCKSIZE).each do |chunk|
           # Break chunk into sixteen 32-bit (unsigned) little-endian words x[i], 0 ≤ i ≤ 15.
-          x = chunk.unpack('V16')
+          x = chunk.pack('C*').unpack('V16')
 
           # Initialize hash value for this chunk:
           a = h0
@@ -185,10 +248,10 @@ module MatasanoLib
           #   [ABCD  8  3]  [DABC  9  7]  [CDAB 10 11]  [BCDA 11 19]
           #   [ABCD 12  3]  [DABC 13  7]  [CDAB 14 11]  [BCDA 15 19]
           [0, 4, 8, 12].each do |i|
-            a = (a + f[b, c, d] + x[i]).left_rotate(3)
-            d = (d + f[a, b, c] + x[i + 1]).left_rotate(7)
-            c = (c + f[d, a, b] + x[i + 2]).left_rotate(11)
-            b = (b + f[c, d, a] + x[i + 3]).left_rotate(19)
+            a = left_rotate(a + f[b, c, d] + x[i],     3)
+            d = left_rotate(d + f[a, b, c] + x[i + 1], 7)
+            c = left_rotate(c + f[d, a, b] + x[i + 2], 11)
+            b = left_rotate(b + f[c, d, a] + x[i + 3], 19)
           end
 
           # Round 2.
@@ -200,10 +263,10 @@ module MatasanoLib
           #   [ABCD  2  3]  [DABC  6  5]  [CDAB 10  9]  [BCDA 14 13]
           #   [ABCD  3  3]  [DABC  7  5]  [CDAB 11  9]  [BCDA 15 13]
           [0, 1, 2, 3].each do |i|
-            a = (a + g[b, c, d] + x[i]       + 0x5A827999).left_rotate(3)
-            d = (d + g[a, b, c] + x[i + 4]   + 0x5A827999).left_rotate(5)
-            c = (c + g[d, a, b] + x[i + 8]   + 0x5A827999).left_rotate(9)
-            b = (b + g[c, d, a] + x[i + 12]  + 0x5A827999).left_rotate(13)
+            a = left_rotate(a + g[b, c, d] + x[i]      + 0x5A827999, 3)
+            d = left_rotate(d + g[a, b, c] + x[i + 4]  + 0x5A827999, 5)
+            c = left_rotate(c + g[d, a, b] + x[i + 8]  + 0x5A827999, 9)
+            b = left_rotate(b + g[c, d, a] + x[i + 12] + 0x5A827999, 13)
           end
 
           # Round 3.
@@ -215,10 +278,10 @@ module MatasanoLib
           #   [ABCD  1  3]  [DABC  9  9]  [CDAB  5 11]  [BCDA 13 15]
           #   [ABCD  3  3]  [DABC 11  9]  [CDAB  7 11]  [BCDA 15 15]
           [0, 2, 1, 3].each do |i|
-            a = (a + h[b, c, d] + x[i]       + 0x6ED9EBA1).left_rotate(3)
-            d = (d + h[a, b, c] + x[i + 8]   + 0x6ED9EBA1).left_rotate(9)
-            c = (c + h[d, a, b] + x[i + 4]   + 0x6ED9EBA1).left_rotate(11)
-            b = (b + h[c, d, a] + x[i + 12]  + 0x6ED9EBA1).left_rotate(15)
+            a = left_rotate(a + h[b, c, d] + x[i]      + 0x6ED9EBA1, 3)
+            d = left_rotate(d + h[a, b, c] + x[i + 8]  + 0x6ED9EBA1, 9)
+            c = left_rotate(c + h[d, a, b] + x[i + 4]  + 0x6ED9EBA1, 11)
+            b = left_rotate(b + h[c, d, a] + x[i + 12] + 0x6ED9EBA1, 15)
           end
 
           # Add this chunk's hash to result so far:
@@ -229,9 +292,19 @@ module MatasanoLib
         end
 
         # Produce the final unsigned 128-bit (little-endian) hash/digest:
-        @digest = [h0, h1, h2, h3].pack('V4')
+        @digest     = [h0, h1, h2, h3].pack('V4')
+        @hex_digest = @digest.to_hex
       end
 
+      def self.digest(message)
+        new(message).digest
+      end
+
+      def self.hex_digest(message)
+        new(message).hex_digest
+      end
+
+      # TODO: Split all these methods below into a different 'attack' class, or just straight up remove these.
       # To implement the attack, first write the function that computes the MD padding of an arbitrary message and verify that you're generating the same padding that your MD4 implementation is using.
       # This should take you 5-10 minutes.
       #   -> (More like 10 seconds rofl.)
@@ -239,15 +312,18 @@ module MatasanoLib
         ml = message.size * 8
 
         message += 0x80.chr
-        message += "\0" * ((448 / 8 - message.size) & ((512 - 1) / 8))
+        message += "\0" * (56 - (message.size & 63) & 63)  # 56 = 448 / 8, and 63 = 512 / 8 - 1. (Readable equivalent for the latter would be '% 64'.)
         message += [ml].pack('Q<')
       end
 
       # Now, take the MD4 secret-prefix MAC of the message you want to forge -- this is just a MD4 hash -- and break it into 32 bit MD4 registers (MD4 calls them "a", "b", "c", etc.).
-      def self.state(digest)
+      def self.extract_final_state(digest)
+        # Check if a hex digest is passed instead and decode it (i.e., MD4_MAC.hex_digest -> MD4_MAC.digest).
+        digest = digest.unhex if digest.is_a?(String) && digest.size == 40
+
         # Reverse the final step in MD4 to retrieve the internal state such that you can clone the state, ultimately allowing us to suffix a payload.
         # I.e., this gives us our four 32-bit MD4 registers, which will be fixated for forging.
-        digest.unpack('V4')
+        digest.unpack('V4')  # => [h0, h1, h2, h3]
       end
 
       def self.length_extension_attack(mac, message, payload, oracle)
@@ -255,19 +331,35 @@ module MatasanoLib
       end
     end
 
-    class MD4_MAC < MD4
+    # MD4 keyed MAC (susceptible to length-extension attacks).
+    class MD4_MAC
+      attr_reader :digest, :hex_digest
+
       def initialize(key, message, ml = nil, h0 = 0x67452301, h1 = 0xEFCDAB89, h2 = 0x98BADCFE, h3 = 0x10325476)
-        super(key + message, ml, h0, h1, h2, h3)
+        md4 = MD4.new(key + message, ml, h0, h1, h2, h3)
+
+        @digest     = md4.digest
+        @hex_digest = md4.hex_digest
+      end
+
+      def self.digest(key, message)
+        new(key, message).digest
+      end
+
+      def self.hex_digest(key, message)
+        new(key, message).hex_digest
       end
 
       def self.verify(key, message, digest)
-        MD4_MAC.new(key, message).digest == digest
+        new(key, message).digest == digest
       end
     end
 
+    
 
     # -- Auxiliary -- #
 
+    # TODO: Deciding whether to keep or delete this (ties in with other TODO comments above). Not sure this will ever be reused.
     module Attack
       module_function
 
@@ -283,7 +375,7 @@ module MatasanoLib
           forged_message = type.pad('A' * key_size + message)[key_size..-1] + payload
 
           # With the registers "fixated", hash the additional data you want to forge.
-          registers  = type.state(mac)
+          registers  = type.extract_final_state(mac)
           forged_mac = type.new('', payload, (key_size + forged_message.size) * 8, *registers).digest
 
           if oracle.verify(forged_message, forged_mac)
