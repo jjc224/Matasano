@@ -1,10 +1,10 @@
 # Challenge 31: implement and break HMAC-SHA1 with an artificial timing leak (client).
 
 # The primary function is written procedurally for the sake of a pretty output considering the time it takes to complete the attack.
-# The reason it takes so long to is due to the way in which HMAC signatures are (insecurely) compared on the server-side (byte-at-a-time with early-exit, which causes the timing leak).
+# The reason it takes so long to is due to the way HMAC signatures are (insecurely) compared on the server-side (byte-at-a-time with early-exit, which causes the timing leak).
+# The time is therefore highly dependent on the artificial timing leak, as you have to wait for sleep().
 
 require 'net/http'
-require_relative 'matasano_lib/monkey_patch'
 
 # Performs a HTTP request to the server which verifies that a given filename corresponds with a given HMAC signature.
 # Returns the body of the request as dictated by the server ('200 OK' or '500 Internal Server Error').
@@ -17,11 +17,18 @@ def do_request(file, signature)
   result.body
 end
 
+# NOTE: Added this to 'matasano_lib/monkey_patch' as Array.median for the future.
 def median(array)
-  size   = array.size
-  sorted = array.sort
+  return nil if array.empty?
 
-  size.even? ? sorted[size / 2] : (sorted[size / 2 - 1] + sorted[size / 2]).to_f / 2
+  sorted = array.sort
+  mid    = array.size / 2
+
+  if array.size.even?
+    (sorted[mid - 1] + sorted[mid]).to_f / 2
+  else
+    sorted[mid]
+  end
 end
 
 # Parameters:

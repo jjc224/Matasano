@@ -1,10 +1,16 @@
 # Challenge 32: break HMAC-SHA1 with a slightly less artificial timing leak (client).
 
 # The primary function is written procedurally for the sake of a pretty output considering the time it takes to complete the attack.
-# The reason it takes so long to is due to the way in which HMAC signatures are (insecurely) compared on the server-side (byte-at-a-time with early-exit, which causes the timing leak).
+# The reason it takes so long to is due to the way HMAC signatures are (insecurely) compared on the server-side (byte-at-a-time with early-exit, which causes the timing leak).
+# The time is therefore highly dependent on the artificial timing leak, as you have to wait for sleep().
+
+# Solution is identical to 31 since I already made the efficient solution the first time (using median).
+# The naive solution for 31 was probably to just choose the highest delta (not use any descriptive statistics).
+
+# This challenge asks to test a 5ms delay down until it breaks. Still working at 0.1ms (see 32_server.rb).
+# You likely can use even smaller delays if you just increase the rounds for timing_attack().
 
 require 'net/http'
-require_relative 'matasano_lib/monkey_patch'
 
 # Performs a HTTP request to the server which verifies that a given filename corresponds with a given HMAC signature.
 # Returns the body of the request as dictated by the server ('200 OK' or '500 Internal Server Error').
@@ -17,11 +23,18 @@ def do_request(file, signature)
   result.body
 end
 
+# NOTE: Added this to 'matasano_lib/monkey_patch' as Array.median for the future.
 def median(array)
-  size   = array.size
-  sorted = array.sort
+  return nil if array.empty?
 
-  size.even? ? sorted[size / 2] : (sorted[size / 2 - 1] + sorted[size / 2]).to_f / 2
+  sorted = array.sort
+  mid    = array.size / 2
+
+  if array.size.even?
+    (sorted[mid - 1] + sorted[mid]).to_f / 2
+  else
+    sorted[mid]
+  end
 end
 
 # Parameters:
@@ -58,12 +71,13 @@ def timing_attack(request: method(:do_request), file: 'foo', rounds:)
   puts  # Newline.
 end
 
-# 15 rounds appears to be the least yet optimal number for correlating any given filename with its signature given the server-side time leak.
-# This has been tested thoroughly with a variety of filenames, some of which were extremely lengthy and "odd" in terms of the charset.
-timing_attack(rounds: 15)  # NOTE: The number of rounds can be reduced on a case-by-case basis (depending on the complexity of the filename).
+# Only increased rounds from 15 to 20 and tested for default filename ('foo') since 15 rounds got the final byte or two wrong.
+# This is because the previous challenge (#31) uses the same code, and the code has already been tested thoroughly. 
+# The only change here (server side) is the timing leak has been decreased. The solution implemented as of #31 is already optimal per the use of median.
+timing_attack(rounds: 20)  # NOTE: The number of rounds can be reduced on a case-by-case basis (depending on the complexity of the filename).
 
 # Output:
 # -----------------------------------------------------------------------------
 # [josh@purehacking] [/dev/ttys002] [~/Projects/Matasano/Ruby]> time ruby 32.rb
 # Recovered HMAC: 274b7c4d98605fcf739a0bf9237551623f415fb8
-# ruby 32.rb  87.88s user 35.03s system 2% cpu 1:18:20.82 total
+# ruby 32.rb  21.80s user 10.78s system 8% cpu 6:05.66 total

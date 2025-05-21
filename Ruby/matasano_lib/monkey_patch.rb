@@ -47,4 +47,17 @@ class Array
   def decode64
     map { |x| x.unpack('m')[0] }
   end
+
+  def median
+    return nil if empty?
+
+    sorted = sort
+    mid    = size / 2
+
+    if size.even?
+      (sorted[mid - 1] + sorted[mid]).to_f / 2
+    else
+      sorted[mid]
+    end
+  end
 end
