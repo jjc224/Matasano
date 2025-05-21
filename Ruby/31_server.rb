@@ -1,50 +1,59 @@
-# NOTE/TODO: MatasanoLib::Digest::SHA1 needs fixing - digests are only correct for some inputs.
-#            Using OpenSSL for correctness for now.
-
 require 'sinatra'
-require 'openssl'
-require 'securerandom'
 
-require_relative 'matasano_lib/monkey_patch'
-require_relative 'matasano_lib/xor'
+require_relative 'matasano_lib/digest'
 
-HMAC_KEY = 'YELLOW SUBMARINE'
+class SHA1_HMAC
+  attr_reader :digest, :hex_digest
 
-class MyDigest
-  def self.HMAC_SHA1(key, message)
-    key = OpenSSL::Digest::SHA1.digest(key).digest if key.size > 64
-    key = pad(key)                                 if key.size < 64
+  BLOCKSIZE = 64
 
-    opad = MatasanoLib::XOR.crypt("\x5c" * 64, key).unhex
-    ipad = MatasanoLib::XOR.crypt("\x36" * 64, key).unhex
+  def initialize(key, message)
+    # Per RFC 2104 -- https://en.wikipedia.org/wiki/HMAC
+    #   HMAC(K, m) = H((K' ^ opad) || H((K' ^ ipad) || m)) such that 
+    #   K' = H(K) if K > blocksize; else, K
+    key = SHA1.new(key).digest if key.size > BLOCKSIZE
+    key = key.ljust(BLOCKSIZE, "\0")  # We must pad to 64 bytes either way (whether key is hashed to 20 bytes or plaintext/unchanged).
 
-    sha1 = OpenSSL::Digest::SHA1.new
-    data = opad + OpenSSL::Digest::SHA1.digest(ipad + message)
-    sha1.digest(data).to_hex
+    o_key_pad = key.bytes.map { |k| (k ^ 0x5c) }.pack('C*')
+    i_key_pad = key.bytes.map { |k| (k ^ 0x36) }.pack('C*')
+
+    sha1_hmac = SHA1.new(o_key_pad + SHA1.digest(i_key_pad + message))  # HMAC(K, m)
+
+    @digest     = sha1_hmac.digest
+    @hex_digest = sha1_hmac.hex_digest
   end
 
-  def self.pad(key)
-    key + "\0" * (64 - (key.size % 64))
+  def self.digest(key, message)
+    new(key, message).digest
+  end
+
+  def self.hex_digest(key, message)
+    new(key, message).hex_digest
+  end
+
+  # Not used for challenges but could be useful for testing.
+  def self.verify(key, message, digest)
+    new(key, message).digest == digest
   end
 end
 
 class Oracle
-  attr_reader :file, :key, :hmac
+  HMAC_KEY = 'YELLOW SUBMARINE'
 
   def initialize(file)
-    @file = file
-    @key  = HMAC_KEY
-    @hmac = MyDigest::HMAC_SHA1(@key, @file)
+    @hmac = MatasanoLib::Digest::SHA1_HMAC.hex_digest(HMAC_KEY, file)
   end
 
   def insecure_compare(signature)
-    # Break into two chunks because we're dealing with hexadecimal: two chars equals one byte.
-    @hmac.chunk(2).zip(signature.chunk(2)).each do |c1, c2|
-      return false if c1 != c2  # Exit early if bytes match (vulnerability part 1/2).
-      sleep(0.005)              # Artificial timing leak (vulnerability part 2/2).
+    return false unless signature.bytesize == @hmac.bytesize
+
+    # Validate HMAC signature with byte-at-a-time comparison (insecurely).
+    @hmac.bytes.zip(signature.bytes).each do |b1, b2|
+      return false if b1 != b2  # Exit early if bytes do not match (vulnerability part 1/2).
+      sleep(0.05)               # Artificial timing leak of 50ms (vulnerability part 2/2).
     end
 
-    true
+    true  # Bytes match (artificial delay in effect).
   end
 end
 
