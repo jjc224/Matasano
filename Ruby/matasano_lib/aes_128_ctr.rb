@@ -13,7 +13,7 @@ module MatasanoLib
 
         for i in 0...blocks.size
           counter   = [opts[:nonce], i].pack(opts[:format])
-          keystream = AES_128.encrypt(counter, key, :mode => :ECB, :padded => false)
+          keystream = AES_128.encrypt(counter, key, mode: :ECB, padded: false)
 
           ciphertext << XOR.crypt(blocks[i], keystream).unhex
         end
@@ -24,4 +24,4 @@ module MatasanoLib
   end
 end
 
-# C_K = AES-128-ECB(K, $AES_KEY, :padded => false)
+# C_K = AES-128-ECB(K, $AES_KEY, padded: false)

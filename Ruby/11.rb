@@ -16,10 +16,10 @@ def aes_rand_encrypt(plaintext)
 
   if ecb_mode
     puts "[+] Encrypting under ECB.\n\n"
-    MatasanoLib::AES_128.encrypt(plaintext, random_aes_key, :mode => :ECB)
+    MatasanoLib::AES_128.encrypt(plaintext, random_aes_key, mode: :ECB)
   else
     puts "[+] Encrypting under CBC.\n\n"
-    MatasanoLib::AES_128.encrypt(plaintext, random_aes_key, :mode => :CBC, :iv => random_aes_key)  # "use random IVs each time for CBC"
+    MatasanoLib::AES_128.encrypt(plaintext, random_aes_key, mode: :CBC, iv: random_aes_key)  # "use random IVs each time for CBC"
   end
 end
 

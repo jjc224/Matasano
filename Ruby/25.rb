@@ -14,19 +14,19 @@ AES_KEY = '971fe7b9c17f4ad77fef00d8b487c413'.unhex
 def encryption_oracle
   # From an early-on AES-128-ECB exercise. 'YELLOW SUBMARINE' is the 128-bit key.
   ciphertext = URL::decode64('http://cryptopals.com/static/challenge-data/25.txt')
-  plaintext  = AES_128.decrypt(ciphertext, 'YELLOW SUBMARINE', :mode => :ECB)
+  plaintext  = AES_128.decrypt(ciphertext, 'YELLOW SUBMARINE', mode: :ECB)
 
-  AES_128.encrypt(plaintext, AES_KEY, :mode => :CTR)
+  AES_128.encrypt(plaintext, AES_KEY, mode: :CTR)
 end
 
 ciphertext = encryption_oracle
 
 # Now, write the code that allows you to "seek" into the ciphertext, decrypt, and re-encrypt with different plaintext. Expose this as a function, like, "edit(ciphertext, key, offset, newtext)".
 def edit(ciphertext, key, offset, new_text)
-  plaintext = AES_128.decrypt(ciphertext, key, :mode => :CTR)
+  plaintext = AES_128.decrypt(ciphertext, key, mode: :CTR)
   plaintext[offset % plaintext.size, new_text.size] = new_text[0..plaintext.size]  # Modulo so it wraps around to imitate a fixed-size buffer, such as a disk.
 
-  AES_128.encrypt(plaintext, key, :mode => :CTR)
+  AES_128.encrypt(plaintext, key, mode: :CTR)
 end
 
 # Imagine the "edit" function was exposed to attackers by means of an API call that didn't reveal the key or the original plaintext; the attacker has the ciphertext and controls the offset and "new text".

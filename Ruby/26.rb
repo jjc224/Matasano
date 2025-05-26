@@ -20,11 +20,11 @@ AES_KEY   = 'd41d19c407130e53228994fa192dcaf7'.unhex
 
 def encrypt_request(input)
     input = "comment1=cooking%20MCs;userdata=" << input.gsub(/([;=])/, '\'\1\'') << ";comment2=%20like%20a%20pound%20of%20bacon"
-    MatasanoLib::AES_128.encrypt(input, AES_KEY, :mode => :CTR)
+    MatasanoLib::AES_128.encrypt(input, AES_KEY, mode: :CTR)
 end
 
 def is_admin?(input)
-    plaintext = MatasanoLib::AES_128.decrypt(input, AES_KEY, :mode => :CTR, :nonce => NONCE)
+    plaintext = MatasanoLib::AES_128.decrypt(input, AES_KEY, mode: :CTR, nonce: NONCE)
     data_pair = Hash[plaintext.split(';').map { |x| x.split('=') }]
 
     p data_pair

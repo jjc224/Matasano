@@ -13,7 +13,7 @@ module MatasanoLib
       extend MatasanoLib::AES_128_COMMON
 
       def encrypt(plaintext, key, opts = {})
-        raise "No block cipher mode specified." unless opts[:mode]
+        raise 'No block cipher mode specified.' unless opts[:mode]
 
         ciphertext = case opts[:mode]
                      when :ECB then AES_128_ECB.encrypt(plaintext, key, opts)
@@ -25,7 +25,7 @@ module MatasanoLib
       end
 
       def decrypt(ciphertext, key, opts = {})
-        raise "No block cipher mode specified." unless opts[:mode]
+        raise 'No block cipher mode specified.' unless opts[:mode]
 
         plaintext = case opts[:mode]
                     when :ECB then AES_128_ECB.decrypt(ciphertext, key, opts)

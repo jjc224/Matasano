@@ -10,6 +10,8 @@ require_relative 'matasano_lib/monkey_patch'
 require_relative 'matasano_lib/aes_128'
 require_relative 'matasano_lib/xor'
 
+# FIXME: Just noticed there is a small bug per the output (possibly an off-by-one issue).
+
 # Take your CTR encrypt/decrypt function and fix its nonce value to 0. Generate a random AES key.
 $AES_KEY = '4d79fe4bcacbd950db9b20bfc656259c'.unhex
 
@@ -86,7 +88,7 @@ def decrypt_keystream(ciphertexts)
   keystream
 end
 
-ciphertexts = $plaintexts.map { |enc| MatasanoLib::AES_128.encrypt(enc.decode64, $AES_KEY, :mode => :CTR) }
+ciphertexts = $plaintexts.map { |enc| MatasanoLib::AES_128.encrypt(enc.decode64, $AES_KEY, mode: :CTR) }
 keystream   = decrypt_keystream(ciphertexts)
 
 ciphertexts.each do |enc|

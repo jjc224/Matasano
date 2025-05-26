@@ -12,11 +12,11 @@ class String
   end
 
   def encode64
-    [self].pack('m')
+    [self].pack('m0')
   end
 
   def decode64
-    unpack('m')[0]
+    unpack('m0')[0]
   end
 end
 
@@ -41,11 +41,11 @@ class Array
   end
 
   def encode64
-    map { |x| [x].pack('m') }
+    map { |x| [x].pack('m0') }
   end
 
   def decode64
-    map { |x| x.unpack('m')[0] }
+    map { |x| x.unpack('m0')[0] }
   end
 
   def median

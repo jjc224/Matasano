@@ -26,11 +26,11 @@ def encrypt_request(input)
   input = "comment1=cooking%20MCs;userdata=" << input.gsub(/([;=])/, '\'\1\'') << ";comment2=%20like%20a%20pound%20of%20bacon"
   input = PKCS7.pad(input)
 
-  AES_128.encrypt(input, AES_KEY, :mode => :CBC, :iv => AES_KEY)
+  AES_128.encrypt(input, AES_KEY, mode: :CBC, iv: AES_KEY)
 end
 
 def is_admin?(input)
-  plaintext = AES_128.decrypt(input, AES_KEY, :mode => :CBC, :iv => AES_KEY)
+  plaintext = AES_128.decrypt(input, AES_KEY, mode: :CBC, iv: AES_KEY)
 
   raise(AsciiComplianceError, plaintext) unless is_ascii_compliant?(plaintext)
 

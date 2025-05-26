@@ -5,6 +5,8 @@
 #
 # Another bottom-up, dynamic programming approach to solving this puzzle. It simplified the process greatly.
 
+# FIXME: Just noticed there is a small bug per the output (possibly an off-by-one issue).
+
 require_relative 'matasano_lib/monkey_patch'
 require_relative 'matasano_lib/aes_128'
 require_relative 'matasano_lib/xor'
@@ -78,7 +80,7 @@ def decrypt_keystream(ciphertexts)
 end
 
 def break_fixed_nonce_ctr
-  ciphertexts = PLAINTEXTS.map { |enc| MatasanoLib::AES_128.encrypt(enc.decode64, AES_KEY, :mode => :CTR) }
+  ciphertexts = PLAINTEXTS.map { |enc| MatasanoLib::AES_128.encrypt(enc.decode64, AES_KEY, mode: :CTR) }
   keystream   = decrypt_keystream(ciphertexts)
 
   ciphertexts.map { |enc| MatasanoLib::XOR.crypt(enc, keystream).unhex }

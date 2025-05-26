@@ -10,7 +10,7 @@ require 'net/http'
 # Returns the body of the request as dictated by the server ('200 OK' or '500 Internal Server Error').
 def do_request(file, signature)
   uri       = URI('http://localhost:4567/test')
-  params    = {:file => file, :signature => signature}
+  params    = {file: file, signature: signature}
   uri.query = URI.encode_www_form(params)
   result    = Net::HTTP.get_response(uri)
 
