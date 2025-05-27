@@ -144,7 +144,7 @@ def simulate_attack
 
   # M->A: Send "p"
   # Note: this is key-fixing aspect of the attack (on Alice).
-  mallory.transmit(alice, bob_dh.p)       # Could also be alice_dh.p sent; doesn't matter here since p is the same. But this is logically consistent with key exchange.
+  mallory.transmit(alice, bob_dh.p)   # Could also be alice_dh.p sent; doesn't matter here since p is the same. But this is logically consistent with key exchange.
   alice_dh.set_session_key(bob_dh.p)  # Could also be alice_dh.p sent; doesn't matter here since p is the same. But this is logically consistent with key exchange.
 
   raise 'Session key failure.' unless alice_dh.session_key == bob_dh.session_key
